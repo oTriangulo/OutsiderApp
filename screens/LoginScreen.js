@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Alert, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, TextInput, Button, Alert, StyleSheet, ActivityIndicator, Text } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from './firebaseConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -44,6 +44,7 @@ const LoginScreen = ({ navigation }) => {
       ) : (
         <Button title="Login" onPress={login} />
       )}
+        <Text onPress={() => navigation.navigate('Signup')}>Sign Up </Text>
     </View>
   );
 };
