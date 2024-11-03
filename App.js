@@ -40,16 +40,25 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator>
-        {userToken ? (
-          // Se o usuario estiver logado, mostra a Home
-          <Stack.Screen name="Home" component={HomeScreen} />
-        ) : (
-          // Se não estiver logado, mostra o Login
-          <Stack.Screen name="Login" component={LoginScreen} />
-        )}
+      <Stack.Navigator initialRouteName="Login">
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Home" component={HomeScreen} />
       </Stack.Navigator>
     </NavigationContainer>
+
+
+// código que não consegui fazer funcionar de jeito nenhum, tomara q o app pare de funcionar
+//    <NavigationContainer>
+//      <Stack.Navigator>
+//        {userToken ? (
+//          // Se o usuario estiver logado, mostra a Home
+//          <Stack.Screen name="Home" component={HomeScreen} />
+//        ) : (
+//          // Se não estiver logado, mostra o Login
+//          <Stack.Screen name="Login" component={LoginScreen} />
+//        )}
+//      </Stack.Navigator>
+//   </NavigationContainer>
   );
 }
 
