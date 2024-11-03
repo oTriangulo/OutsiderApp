@@ -4,10 +4,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+// importando as telas
 import HomeScreen from './screens/HomeScreen';
 import LoginScreen from './screens/LoginScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import PlaceRegisterScreen from './screens/PlaceRegisterScreen';
+import EditNameScreen from './screens/EditNameScreen';
+import CreatePostScreen from './screens/CreatePostScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -41,12 +45,15 @@ export default function App() {
   }
 
   return (
+    //alterar o initialroutename para login após finalizar o design
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login">
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Signup" component={PlaceRegisterScreen} />
-        <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Navigator initialRouteName="Home"> 
+        <Stack.Screen name="Login" component={LoginScreen} options={{headerShown: false}}/>
+        <Stack.Screen name="Home" component={HomeScreen} options={{headerShown: false}}/>
+        <Stack.Screen name="Signup" component={PlaceRegisterScreen} options={{headerShown: false}}/>
+        <Stack.Screen name="Profile" component={ProfileScreen} options={{headerShown: false}}/>
+        <Stack.Screen name="EditName" component={EditNameScreen} options={{headerShown: false}}/>
+        <Stack.Screen name="CreatePost" component={CreatePostScreen} options={{headerShown: false}}/>
       </Stack.Navigator>
     </NavigationContainer>
 

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Alert, StyleSheet, ActivityIndicator, Text } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from './firebaseConfig';
+import { firebaseAuth, firebaseDb } from '../configs/firebaseConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import firebase from 'firebase/compat/app';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -13,7 +12,7 @@ const LoginScreen = ({ navigation }) => {
   const login = async () => {
     setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(firebaseAuth, email, password);
       const token = await userCredential.user.getIdToken();
       await AsyncStorage.setItem('userToken', token);
       navigation.replace('Home');
@@ -45,6 +44,7 @@ const LoginScreen = ({ navigation }) => {
         <Button title="Login" onPress={login} />
       )}
         <Text onPress={() => navigation.navigate('Signup')}>Sign Up </Text>
+
     </View>
   );
 };
