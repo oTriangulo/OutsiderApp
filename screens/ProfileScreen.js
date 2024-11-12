@@ -12,28 +12,28 @@ const ProfileScreen = ({ navigation }) => {
     profilePicture: "https://ucarecdn.com/167f1c66-0903-48b0-8d7d-d7247100567e/-/crop/597x598/0,0/-/preview/-/progressive/yes/-/format/auto/-/scale_crop/900x900/",
   };
 
-  //const userId = auth.currentUser ? auth.currentUser.uid : 'userId'; // Obtém o UID do usuário autenticado
+  const userId = auth.currentUser ? auth.currentUser.uid : 'userId'; // Obtém o UID do usuário autenticado
 
-  // Função para atualizar o nome do usuário
-  //const updateUserName = async (newName) => {
-    //setUserName(newName); // Atualiza o estado
-    //await setDoc(doc(db, 'users', userId), { name: newName }); // Usa o UID como ID do documento
-  //};
+  //Função para atualizar o nome do usuário
+  const updateUserName = async (newName) => {
+    setUserName(newName); // Atualiza o estado
+    await setDoc(doc(db, 'users', userId), { name: newName }); // Usa o UID como ID do documento
+  };
 
-  // Efeito para carregar o nome do usuário ao iniciar a tela
-  //useEffect(() => {
-    //const loadUserName = async () => {
-      //const docRef = doc(db, 'users', userId); // Usando o UID para carregar os dados do usuário
-      //const docSnap = await getDoc(docRef);
+  //Efeito para carregar o nome do usuário ao iniciar a tela
+  useEffect(() => {
+    const loadUserName = async () => {
+      const docRef = doc(db, 'users', userId); // Usando o UID para carregar os dados do usuário
+      const docSnap = await getDoc(docRef);
 
-      //if (docSnap.exists()) {
-        //setUserName(docSnap.data().name); // Carrega o nome do Firestore
-      //} else {
-        //console.log("No such document!");
-      //}
-    //};
-    //loadUserName();
-  //}, [userId]); // Dependência no userId para recarregar se mudar
+      if (docSnap.exists()) {
+        setUserName(docSnap.data().name); // Carrega o nome do Firestore
+      } else {
+        console.log("No such document!");
+      }
+    };
+    loadUserName();
+  }, [userId]); // Dependência no userId para recarregar se mudar
 
   return (
     <View style={styles.container}>
@@ -53,7 +53,7 @@ const ProfileScreen = ({ navigation }) => {
         <TouchableOpacity
           style={styles.editNameButton}
           onPress={() => navigation.navigate('EditName', {
-            //currentName: userName,
+            currentName: userName,
             updateUserName: updateUserName,
           })}
         >
