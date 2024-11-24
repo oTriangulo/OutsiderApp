@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TextInput, Alert, StyleSheet, ActivityIndicator, Text, Image, TouchableOpacity } from 'react-native';
 import { supabase } from '../configs/Supabase'; // Configuração do Supabase
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -8,7 +8,25 @@ const LoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Função de login
+  useEffect(() => {
+    const checkUserSession = async () => {
+      const userToken = await AsyncStorage.getItem('userToken');
+      if (userToken) {
+        // Se já houver um token armazenado, o usuário está autenticado
+        navigation.replace('Home');
+      } else {
+        // Caso contrário, permanece na tela de login
+        const session = supabase.auth.session();
+        if (session) {
+          // Caso já tenha uma sessão ativa
+          navigation.replace('Home');
+        }
+      }
+    };
+
+    checkUserSession();
+  }, []);
+
   const login = async () => {
     setLoading(true);
     try {
@@ -26,7 +44,7 @@ const LoginScreen = ({ navigation }) => {
       const token = data.session.access_token;
       await AsyncStorage.setItem('userToken', token);
 
-      // Navega para a tela "Profile" após o login bem-sucedido
+      // Navega para a tela "Home" após o login bem-sucedido
       navigation.replace('Home');
     } catch (error) {
       Alert.alert('Falha no Login', error.message);
@@ -75,9 +93,9 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   logo: {
-    width: 200, // Aumente a largura da logo para evitar corte
-    height: 200, // Ajuste a altura conforme necessário
-    marginBottom: 30, // Espaçamento entre a logo e os campos
+    width: 200,
+    height: 200,
+    marginBottom: 30,
   },
   input: {
     height: 40,

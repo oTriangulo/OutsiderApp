@@ -1,16 +1,29 @@
-import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Button, StyleSheet, Image, Alert } from 'react-native';
-import { supabase } from '../configs/Supabase'; // Importando a configuração do Supabase
+import { supabase } from '../configs/Supabase';
 import * as ImagePicker from 'expo-image-picker';
 import uuid from 'react-native-uuid';
+import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useState, useEffect } from 'react';
 
 const CreatePostScreen = ({ navigation }) => {
+  const [image, setImage] = useState(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [image, setImage] = useState(null);
+  const [user, setUser] = useState(null);
 
-  // Função para selecionar uma imagem da galeria
+  useEffect(() => {
+    const session = supabase.auth.getSession();
+    session.then((response) => {
+      if (response.data?.user) {
+        setUser(response.data.user);
+      } else {
+        console.log('Usuário não autenticado.');
+        navigation.navigate('Login');
+      }
+    });
+  }, []);
+
   const pickImage = async () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -34,7 +47,6 @@ const CreatePostScreen = ({ navigation }) => {
     }
   };
 
-  // Função para tirar uma foto com a câmera
   const takePhoto = async () => {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -63,56 +75,48 @@ const CreatePostScreen = ({ navigation }) => {
         Alert.alert('Erro', 'Nenhuma imagem foi selecionada.');
         return null;
       }
-  
+
       const fileExt = uri.split('.').pop();
       const fileName = `${uuid.v4()}.${fileExt}`;
-  
+
       if (!['jpg', 'jpeg', 'png'].includes(fileExt.toLowerCase())) {
         Alert.alert('Erro', 'Formato de arquivo não suportado. Escolha JPG ou PNG.');
         return null;
       }
-  
-      const response = await fetch(uri);
-      const blob = await response.blob();
-  
-      // Usando o bucket correto 'files' aqui
-      const { data, error } = await supabase.storage
-        .from('files')  // Mudando para o bucket correto 'files'
-        .upload(`user_images/${uuid.v4()}/${fileName}`, blob, {
-          cacheControl: '3600',
-          upsert: false,
-        });
-  
-      if (error) {
-        console.error('Erro ao fazer upload:', error.message);
-        Alert.alert('Erro ao fazer upload', error.message);
-        return null;
+
+      const formData = new FormData();
+      formData.append('file', {
+        uri: uri,
+        type: `image/${fileExt}`,
+        name: fileName,
+      });
+
+      const response = await axios.post(
+        `https://fyllypgnomzidhyyrdbd.supabase.co/storage/v1/object/values/files/user_images/${fileName}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${supabase.auth.session().access_token}`,
+          },
+        }
+      );
+
+      if (response.data) {
+        const publicUrl = `https://fyllypgnomzidhyyrdbd.supabase.co/storage/v1/object/public/files/user_images/${fileName}`;
+        return publicUrl;
       }
-  
-      // Pegando a URL pública da imagem
-      const { publicUrl, error: urlError } = supabase.storage
-        .from('files')
-        .getPublicUrl(data.path);
-  
-      if (urlError) {
-        console.error('Erro ao obter URL pública:', urlError.message);
-        Alert.alert('Erro ao obter URL pública', urlError.message);
-        return null;
-      }
-  
-      return publicUrl;
     } catch (error) {
       console.error('Erro ao fazer upload:', error.message);
       Alert.alert('Erro ao fazer upload', 'Verifique sua conexão e tente novamente.');
       return null;
     }
   };
-  
 
-  // Função para criar um novo post
   const createPost = async () => {
     try {
-      const { data: user, error: userError } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getSession();
+
       if (userError || !user) {
         console.error('Erro ao recuperar o usuário:', userError?.message || 'Usuário não autenticado.');
         Alert.alert('Erro', 'Você precisa estar logado para criar um post.');
@@ -123,14 +127,13 @@ const CreatePostScreen = ({ navigation }) => {
 
       let imageURL = null;
       if (image) {
-        imageURL = await uploadImageAsync(image); // Obtendo URL pública da imagem
+        imageURL = await uploadImageAsync(image);
       }
 
       if (!imageURL) {
-        imageURL = 'https://example.com/default-image.png'; // Imagem padrão caso o usuário não tenha selecionado nenhuma
+        imageURL = 'https://example.com/default-image.png';
       }
 
-      // Criando o post com a URL da imagem
       const { error } = await supabase.from('posts').insert([
         {
           title,

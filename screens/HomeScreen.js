@@ -27,7 +27,7 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.content}>
         <Text style={styles.text}>Home Screen</Text>
       </View>
-
+      
       {/* Botão redondo para criar post no canto inferior direito */}
       <TouchableOpacity 
         style={styles.addButton} 
