@@ -1,43 +1,61 @@
-import { View, TextInput, TouchableOpacity, Button, StyleSheet, Image, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Button,
+  StyleSheet,
+  Image,
+  Alert,
+} from 'react-native';
 import { supabase } from '../configs/Supabase';
 import * as ImagePicker from 'expo-image-picker';
 import uuid from 'react-native-uuid';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useState, useEffect } from 'react';
 
 const CreatePostScreen = ({ navigation }) => {
   const [image, setImage] = useState(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const session = supabase.auth.getSession();
-    session.then((response) => {
-      if (response.data?.user) {
-        setUser(response.data.user);
-      } else {
-        console.log('Usuário não autenticado.');
-        navigation.navigate('Login');
+    const verifySession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error || !data?.session?.user) {
+          console.log('Usuário não autenticado. Redirecionando...');
+          navigation.navigate('Login');
+        } else {
+          setUser(data.session.user);
+        }
+      } catch (err) {
+        console.error('Erro ao verificar sessão:', err.message);
+        Alert.alert('Erro', 'Não foi possível verificar a sessão.');
+      } finally {
+        setLoading(false);
       }
-    });
-  }, []);
+    };
+
+    verifySession();
+  }, [navigation]);
 
   const pickImage = async () => {
+    // Lógica para selecionar imagem da galeria
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Permissão necessária para acessar a galeria.');
         return;
       }
-
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         quality: 1,
       });
-
       if (!result.canceled) {
         setImage(result.assets[0].uri);
       }
@@ -48,18 +66,17 @@ const CreatePostScreen = ({ navigation }) => {
   };
 
   const takePhoto = async () => {
+    // Lógica para tirar foto
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Permissão necessária para usar a câmera.');
         return;
       }
-
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         quality: 1,
       });
-
       if (!result.canceled) {
         setImage(result.assets[0].uri);
       }
@@ -70,6 +87,7 @@ const CreatePostScreen = ({ navigation }) => {
   };
 
   const uploadImageAsync = async (uri) => {
+    // Lógica para upload de imagem
     try {
       if (!uri) {
         Alert.alert('Erro', 'Nenhuma imagem foi selecionada.');
@@ -97,14 +115,13 @@ const CreatePostScreen = ({ navigation }) => {
         {
           headers: {
             'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${supabase.auth.session().access_token}`,
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session.access_token}`,
           },
         }
       );
 
       if (response.data) {
-        const publicUrl = `https://fyllypgnomzidhyyrdbd.supabase.co/storage/v1/object/public/files/user_images/${fileName}`;
-        return publicUrl;
+        return `https://fyllypgnomzidhyyrdbd.supabase.co/storage/v1/object/public/files/user_images/${fileName}`;
       }
     } catch (error) {
       console.error('Erro ao fazer upload:', error.message);
@@ -114,22 +131,13 @@ const CreatePostScreen = ({ navigation }) => {
   };
 
   const createPost = async () => {
+    if (!user) {
+      Alert.alert('Erro', 'Usuário não autenticado.');
+      return;
+    }
+
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getSession();
-
-      if (userError || !user) {
-        console.error('Erro ao recuperar o usuário:', userError?.message || 'Usuário não autenticado.');
-        Alert.alert('Erro', 'Você precisa estar logado para criar um post.');
-        return;
-      }
-
-      const user_id = user.id;
-
-      let imageURL = null;
-      if (image) {
-        imageURL = await uploadImageAsync(image);
-      }
-
+      let imageURL = image ? await uploadImageAsync(image) : null;
       if (!imageURL) {
         imageURL = 'https://example.com/default-image.png';
       }
@@ -139,7 +147,7 @@ const CreatePostScreen = ({ navigation }) => {
           title,
           description,
           image: imageURL,
-          user_id,
+          user_id: user.id,
         },
       ]);
 
@@ -149,7 +157,7 @@ const CreatePostScreen = ({ navigation }) => {
         return;
       }
 
-      Alert.alert('Post criado com sucesso!');
+      Alert.alert('Sucesso', 'Post criado com sucesso!');
       navigation.goBack();
     } catch (error) {
       console.error('Erro ao criar post:', error.message);
@@ -157,21 +165,24 @@ const CreatePostScreen = ({ navigation }) => {
     }
   };
 
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text>Carregando...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Icon name="chevron-left" size={44} color="#007bff" />
       </TouchableOpacity>
 
       <Button title="Selecionar imagem da galeria" onPress={pickImage} />
       <Button title="Tirar foto" onPress={takePhoto} />
       {image && <Image source={{ uri: image }} style={styles.image} />}
-      {!image && (
-        <Image source={require('../assets/PlaceHolder.png')} style={styles.image} />
-      )}
+      {!image && <Image source={require('../assets/PlaceHolder.png')} style={styles.image} />}
 
       <TextInput
         placeholder="Título"

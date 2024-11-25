@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Alert, StyleSheet, ActivityIndicator, Text, Image, TouchableOpacity } from 'react-native';
-import { supabase } from '../configs/Supabase'; // Configuração do Supabase
+import {
+  View,
+  TextInput,
+  Alert,
+  StyleSheet,
+  ActivityIndicator,
+  Text,
+  Image,
+  TouchableOpacity,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../configs/Supabase';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -10,44 +19,45 @@ const LoginScreen = ({ navigation }) => {
 
   useEffect(() => {
     const checkUserSession = async () => {
-      const userToken = await AsyncStorage.getItem('userToken');
-      if (userToken) {
-        // Se já houver um token armazenado, o usuário está autenticado
-        navigation.replace('Home');
-      } else {
-        // Caso contrário, permanece na tela de login
-        const session = supabase.auth.session();
-        if (session) {
-          // Caso já tenha uma sessão ativa
-          navigation.replace('Home');
+      try {
+        const token = await AsyncStorage.getItem('userToken');
+        if (token) {
+          // Verifica se o token é válido
+          const { data, error } = await supabase.auth.getSession();
+          if (error || !data?.session) {
+            await AsyncStorage.removeItem('userToken'); // Remove token inválido
+          } else {
+            navigation.replace('Home'); // Vai direto para a tela inicial
+          }
         }
+      } catch (error) {
+        console.error('Erro ao verificar sessão:', error.message);
       }
     };
 
     checkUserSession();
-  }, []);
+  }, [navigation]);
 
-  const login = async () => {
+  const handleLogin = async () => {
     setLoading(true);
     try {
-      // Login com Supabase usando email e senha
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        throw error;
+        throw new Error('Credenciais inválidas. Por favor, tente novamente.');
       }
 
-      // Salva o token do usuário localmente
+      // Armazena o token para uso posterior
       const token = data.session.access_token;
       await AsyncStorage.setItem('userToken', token);
 
-      // Navega para a tela "Home" após o login bem-sucedido
+      // Redireciona para a tela inicial
       navigation.replace('Home');
     } catch (error) {
-      Alert.alert('Falha no Login', error.message);
+      Alert.alert('Erro no Login', error.message || 'Algo deu errado.');
     } finally {
       setLoading(false);
     }
@@ -55,9 +65,7 @@ const LoginScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Logo acima dos campos de login */}
       <Image source={require('../assets/icon.png')} style={styles.logo} resizeMode="contain" />
-
       <TextInput
         placeholder="Email"
         value={email}
@@ -72,14 +80,14 @@ const LoginScreen = ({ navigation }) => {
         style={styles.input}
       />
       {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#FF9D00" />
       ) : (
-        <TouchableOpacity style={styles.loginButton} onPress={login}>
-          <Text style={styles.buttonText}>Login</Text>
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          <Text style={styles.buttonText}>Entrar</Text>
         </TouchableOpacity>
       )}
       <Text onPress={() => navigation.navigate('Signup')} style={styles.link}>
-        Cadastre-se
+        Não tem conta? Cadastre-se
       </Text>
     </View>
   );
@@ -91,27 +99,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
+    backgroundColor: '#f5f5f5',
   },
   logo: {
-    width: 200,
-    height: 200,
-    marginBottom: 30,
+    width: 150,
+    height: 150,
+    marginBottom: 20,
   },
   input: {
     height: 40,
-    borderColor: 'gray',
+    borderColor: '#ccc',
     borderWidth: 1,
     marginBottom: 12,
     paddingLeft: 8,
     width: '100%',
     borderRadius: 8,
+    backgroundColor: '#fff',
   },
   loginButton: {
     marginTop: 20,
     paddingVertical: 12,
     paddingHorizontal: 32,
-    backgroundColor: '#FF9D00',
-    borderRadius: 14,
+    backgroundColor: '#007bff',
+    borderRadius: 8,
     width: '100%',
     alignItems: 'center',
   },
