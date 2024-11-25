@@ -87,48 +87,47 @@ const CreatePostScreen = ({ navigation }) => {
   };
 
   const uploadImageAsync = async (uri) => {
-    // Lógica para upload de imagem
     try {
       if (!uri) {
         Alert.alert('Erro', 'Nenhuma imagem foi selecionada.');
         return null;
       }
-
+  
       const fileExt = uri.split('.').pop();
-      const fileName = `${uuid.v4()}.${fileExt}`;
-
-      if (!['jpg', 'jpeg', 'png'].includes(fileExt.toLowerCase())) {
-        Alert.alert('Erro', 'Formato de arquivo não suportado. Escolha JPG ou PNG.');
-        return null;
-      }
-
+      const fileName = `${uuid.v4()}.${fileExt}`; 
+  
       const formData = new FormData();
       formData.append('file', {
         uri: uri,
-        type: `image/${fileExt}`,
+        type: `image/${fileExt}`, 
         name: fileName,
       });
-
-      const response = await axios.post(
-        `https://fyllypgnomzidhyyrdbd.supabase.co/storage/v1/object/values/files/user_images/${fileName}`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session.access_token}`,
-          },
-        }
-      );
-
-      if (response.data) {
-        return `https://fyllypgnomzidhyyrdbd.supabase.co/storage/v1/object/public/files/user_images/${fileName}`;
+  
+      const { data, error } = await supabase.storage
+        .from('files')
+        .upload(`files/${fileName}`, {
+          uri,
+          type: `image/${fileExt}`,
+          name: fileName,
+        });
+  
+      if (error) {
+        console.error('Erro no Supabase ao fazer upload:', error.message);
+        Alert.alert('Erro ao fazer upload', error.message);
+        return null;
       }
+  
+      const publicUrl = supabase.storage
+        .from('files')
+        .getPublicUrl(`files/${fileName}`).data.publicUrl;
+  
+      return publicUrl;
     } catch (error) {
       console.error('Erro ao fazer upload:', error.message);
       Alert.alert('Erro ao fazer upload', 'Verifique sua conexão e tente novamente.');
       return null;
     }
-  };
+  };  
 
   const createPost = async () => {
     if (!user) {
