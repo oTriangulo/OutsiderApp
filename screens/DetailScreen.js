@@ -1,30 +1,63 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import React, { useState, useEffect } from 'react';
+import { FlatList, Text, View, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
+import { supabase } from '../configs/Supabase';
 
-const DetailScreen = ({ route }) => {
-  const { post } = route.params; // Recebe o post como parâmetro da navegação
-  const navigation = useNavigation();
+const PAGE_SIZE = 9;
+
+const HomeScreen = ({ navigation }) => {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('posts')
+          .select('id, title, description, image')
+          .limit(PAGE_SIZE);
+
+        if (error) throw error;
+        setPosts(data);
+      } catch (error) {
+        console.error("Erro ao carregar posts:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  const renderPost = ({ item }) => (
+    <TouchableOpacity
+      style={styles.postContainer}
+      onPress={() =>
+        navigation.navigate('Detail', { postId: item.id })
+      }
+    >
+      <ImageBackground
+        source={{ uri: item.image }}
+        style={styles.imageBackground}
+      >
+        <View style={styles.overlay}>
+          <Text style={styles.postTitle}>{item.title}</Text>
+          <Text style={styles.postDescription}>{item.description}</Text>
+        </View>
+      </ImageBackground>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
-      {/* Imagem do Post */}
-      <Image source={{ uri: post.imageUrl }} style={styles.postImage} />
-
-      {/* Descrição do Post */}
-      <View style={styles.content}>
-        <Text style={styles.title}>{post.title}</Text>
-        <Text style={styles.description}>{post.description}</Text>
-      </View>
-
-      {/* Botão para Home */}
-      <TouchableOpacity
-        style={styles.homeButton}
-        onPress={() => navigation.navigate('Home')}
-      >
-        <Icon name="home" size={30} color="#fff" />
-      </TouchableOpacity>
+      {loading ? (
+        <Text>Carregando...</Text>
+      ) : (
+        <FlatList
+          data={posts}
+          renderItem={renderPost}
+          keyExtractor={(item) => item.id.toString()}
+        />
+      )}
     </View>
   );
 };
@@ -32,36 +65,31 @@ const DetailScreen = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 25,
-    backgroundColor: '#fff',
+    padding: 10,
   },
-  postImage: {
-    width: '100%',
-    height: 250,
-    resizeMode: 'cover',
-  },
-  content: {
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  postContainer: {
     marginBottom: 10,
+    borderRadius: 10,
+    overflow: 'hidden',
   },
-  description: {
-    fontSize: 16,
-    color: '#333',
+  imageBackground: {
+    width: '100%',
+    height: 200,
+    justifyContent: 'flex-end',
   },
-  homeButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    backgroundColor: '#FF9D00',
-    borderRadius: 50,
-    padding: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
+  overlay: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 10,
+  },
+  postTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  postDescription: {
+    fontSize: 14,
+    color: '#ccc',
   },
 });
 
-export default DetailScreen;
+export default HomeScreen;

@@ -11,6 +11,8 @@ import LoginScreen from './screens/LoginScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import PlaceRegisterScreen from './screens/PlaceRegisterScreen';
 import CreatePostScreen from './screens/CreatePostScreen';
+import DetailScreen from './screens/DetailScreen'; // Atualizado para importar a tela correta
+
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
 
@@ -53,7 +55,7 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login">
+      <Stack.Navigator initialRouteName={userToken ? "Drawer" : "Login"}>
         {/* Tela de Login */}
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         
@@ -61,10 +63,17 @@ export default function App() {
         <Stack.Screen name="Drawer" component={DrawerNavigator} options={{ headerShown: false }} />
 
         {/* Outras telas */}
-        <Stack.Screen name="Home" component={HomeScreen} options={{headerShown: false}}/>
-        <Stack.Screen name="Signup" component={PlaceRegisterScreen} options={{headerShown: false}}/>
-        <Stack.Screen name="Profile" component={ProfileScreen} options={{headerShown: false}}/>
-        <Stack.Screen name="CreatePost" component={CreatePostScreen} options={{headerShown: false}}/>
+        <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Signup" component={PlaceRegisterScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="CreatePost" component={CreatePostScreen} options={{ headerShown: false }} />
+
+        {/* Tela de detalhes do post */}
+        <Stack.Screen 
+          name="Detail" 
+          component={DetailScreen} 
+          options={{ title: "Detalhes do Post" }} 
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

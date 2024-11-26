@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { supabase } from '../configs/Supabase'; // Importação do Supabase
 
-const UserProfileScreen = ({ navigation }) => {
+const ProfileScreen = ({ navigation }) => {
   const [profilePicture, setProfilePicture] = useState('https://via.placeholder.com/158');
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('');
@@ -13,35 +13,36 @@ const UserProfileScreen = ({ navigation }) => {
   const [places, setPlaces] = useState([]); // Estado para armazenar os lugares registrados
 
   useEffect(() => {
-    // Carregar dados do usuário (nome de usuário, foto de perfil e lugares registrados)
     const loadUserProfile = async () => {
       const user = supabase.auth.user();
       if (user) {
-        // Carregar o nome de usuário e a foto de perfil do banco de dados
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('username, profile_picture')
-          .eq('id', user.id)
-          .single(); // Garantir que pegue apenas 1 resultado
+        try {
+          // Carregar o nome de usuário e a foto de perfil do banco de dados
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('username, profile_picture')
+            .eq('id', user.id)
+            .single(); // Garantir que pegue apenas 1 resultado
 
-        if (error) {
-          Alert.alert('Erro', error.message);
-        } else {
+          if (error) throw error;
+
           setUsername(data.username);
           setProfilePicture(data.profile_picture || 'https://via.placeholder.com/158'); // Foto de perfil
-        }
 
-        // Carregar os lugares registrados pelo usuário
-        const { data: placesData, error: placesError } = await supabase
-          .from('places')
-          .select('*')
-          .eq('user_id', user.id);
+          // Carregar os lugares registrados pelo usuário
+          const { data: placesData, error: placesError } = await supabase
+            .from('places')
+            .select('id, name, description, image_url')
+            .eq('user_id', user.id);
 
-        if (placesError) {
-          Alert.alert('Erro', placesError.message);
-        } else {
+          if (placesError) throw placesError;
+
           setPlaces(placesData); // Atualiza o estado com os lugares registrados
+        } catch (error) {
+          Alert.alert('Erro ao carregar dados', error.message);
         }
+      } else {
+        Alert.alert('Erro', 'Usuário não autenticado');
       }
     };
 
@@ -51,13 +52,9 @@ const UserProfileScreen = ({ navigation }) => {
   // Função para selecionar e fazer upload de imagem
   const handleChangeProfilePicture = async () => {
     try {
-      // Abrir a galeria para selecionar uma imagem
       const result = await launchImageLibrary({ mediaType: 'photo' });
 
-      if (result.didCancel) {
-        return; // Usuário cancelou a seleção
-      }
-
+      if (result.didCancel) return; // Usuário cancelou a seleção
       if (result.errorMessage) {
         Alert.alert('Erro', result.errorMessage);
         return;
@@ -65,26 +62,22 @@ const UserProfileScreen = ({ navigation }) => {
 
       const { uri } = result.assets[0];
 
-      // Mostrar um indicador de carregamento
-      setLoading(true);
+      setLoading(true); // Mostrar carregamento
 
-      // Fazer upload da imagem para o Supabase
       const response = await uploadImageToSupabase(uri);
 
       if (response) {
-        // Atualizar a foto de perfil no estado local e no banco de dados
-        setProfilePicture(response);
-        await updateProfilePictureInDatabase(response);
+        setProfilePicture(response); // Atualiza a foto no estado local
+        await updateProfilePictureInDatabase(response); // Atualiza no banco de dados
         Alert.alert('Sucesso', 'Foto de perfil atualizada com sucesso!');
       }
     } catch (error) {
       Alert.alert('Erro', error.message);
     } finally {
-      setLoading(false);
+      setLoading(false); // Finaliza o carregamento
     }
   };
 
-  // Função para fazer upload da imagem no Supabase
   const uploadImageToSupabase = async (uri) => {
     try {
       const fileName = uri.split('/').pop();
@@ -100,9 +93,7 @@ const UserProfileScreen = ({ navigation }) => {
           contentType: `image/${fileType}`,
         });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       const { publicURL } = supabase.storage
         .from('profile-pictures')
@@ -115,7 +106,6 @@ const UserProfileScreen = ({ navigation }) => {
     }
   };
 
-  // Função para atualizar a URL da foto de perfil no banco de dados
   const updateProfilePictureInDatabase = async (imageUrl) => {
     try {
       const user = supabase.auth.user();
@@ -125,16 +115,13 @@ const UserProfileScreen = ({ navigation }) => {
           .update({ profile_picture: imageUrl, updated_at: new Date().toISOString() })
           .eq('id', user.id);
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
       }
     } catch (error) {
       Alert.alert('Erro ao Atualizar', error.message);
     }
   };
 
-  // Função para atualizar o nome de usuário no banco de dados
   const handleUpdateUsername = async () => {
     try {
       const user = supabase.auth.user();
@@ -144,12 +131,10 @@ const UserProfileScreen = ({ navigation }) => {
           .update({ username: newUsername, updated_at: new Date().toISOString() })
           .eq('id', user.id);
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
         setUsername(newUsername);
-        setModalVisible(false); // Fechar o modal
+        setModalVisible(false);
         Alert.alert('Sucesso', 'Nome de usuário atualizado com sucesso!');
       } else {
         Alert.alert('Erro', 'Por favor, insira um nome de usuário válido.');
@@ -159,123 +144,112 @@ const UserProfileScreen = ({ navigation }) => {
     }
   };
 
-  return (
-    <View style={styles.container}>
-      {/* Ícone de seta no canto superior esquerdo */}
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()} // Navegar para a tela anterior
-      >
-        <Ionicons name="arrow-back" size={32} color="#30A7EB" /> {/* Aumentei o tamanho */}
-      </TouchableOpacity>
-
-      <View style={styles.profileContainer}>
-        {/* Imagem circular usando o URL armazenado */}
-        <Image
-          source={{ uri: profilePicture }}
-          style={styles.profilePicture}
-        />
-
-        {/* Botão circular para alterar a foto de perfil */}
-        <TouchableOpacity style={styles.changePictureButton} onPress={handleChangeProfilePicture}>
-          {loading ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Ionicons name="camera" size={24} color="#fff" />
-          )}
-        </TouchableOpacity>
+  const renderItem = ({ item }) => (
+    <View style={styles.placeItem}>
+      <Image source={{ uri: item.image_url }} style={styles.placeImage} />
+      <View style={styles.placeInfo}>
+        <Text style={styles.placeTitle}>{item.name}</Text>
+        <Text style={styles.placeDescription}>{item.description}</Text>
       </View>
-
-      {/* Nome do usuário e ícone de edição */}
-      <View style={styles.usernameContainer}>
-        <Text style={styles.userName}>{username}</Text>
-
-        {/* Ícone de edição */}
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => setModalVisible(true)} // Mostrar modal quando o ícone for clicado
-        >
-          <Ionicons name="pencil" size={24} color="#FF9D00" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Modal para editar nome de usuário */}
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <TextInput
-              value={newUsername}
-              onChangeText={setNewUsername}
-              style={styles.usernameInput}
-              placeholder="Digite o novo nome de usuário"
-            />
-            <TouchableOpacity style={styles.updateButton} onPress={handleUpdateUsername}>
-              <Text style={styles.updateButtonText}>Atualizar Nome</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.closeButtonText}>Cancelar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Frase "Lugares Registrados" */}
-      <Text style={styles.lugaresTitle}>Lugares Registrados</Text>
-
-      {/* Lista de lugares registrados */}
-      <FlatList
-        data={places}
-        renderItem={({ item }) => (
-          <View style={styles.placeItem}>
-            <Text style={styles.placeText}>{item.name}</Text> {/* Exibe o nome do lugar */}
-          </View>
-        )}
-        keyExtractor={(item) => item.id.toString()}
-      />
     </View>
+  );
+
+  return (
+    <FlatList
+      ListHeaderComponent={
+        <>
+          {/* Ícone de seta no canto superior esquerdo */}
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()} // Navegar para a tela anterior
+          >
+            <Ionicons name="arrow-back" size={32} color="#30A7EB" />
+          </TouchableOpacity>
+
+          <View style={styles.profileContainer}>
+            <Image
+              source={{ uri: profilePicture }}
+              style={styles.profilePicture}
+            />
+            <TouchableOpacity style={styles.changePictureButton} onPress={handleChangeProfilePicture}>
+              {loading ? <ActivityIndicator size="small" color="#fff" /> : <Ionicons name="camera" size={24} color="#fff" />}
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.usernameContainer}>
+            <Text style={styles.userName}>{username}</Text>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => setModalVisible(true)}
+            >
+              <Ionicons name="pencil" size={24} color="#FF9D00" />
+            </TouchableOpacity>
+          </View>
+
+          <Modal
+            visible={modalVisible}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setModalVisible(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <TextInput
+                  value={newUsername}
+                  onChangeText={setNewUsername}
+                  style={styles.usernameInput}
+                  placeholder="Digite o novo nome de usuário"
+                />
+                <TouchableOpacity style={styles.updateButton} onPress={handleUpdateUsername}>
+                  <Text style={styles.updateButtonText}>Atualizar Nome</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+                  <Text style={styles.closeButtonText}>Cancelar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+
+          <Text style={styles.lugaresTitle}>Lugares Registrados</Text>
+        </>
+      }
+      data={places}
+      renderItem={renderItem}
+      keyExtractor={(item) => item.id.toString()}
+    />
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'flex-start', // Alinhando para o topo
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingTop: 20, // Espaço extra no topo
+    padding: 20,
   },
   backButton: {
     position: 'absolute',
-    top: 40, // Ajustado para ficar mais para baixo
-    left: 20,
+    top: 40,
+    left: 10,
+    zIndex: 10,
   },
   profileContainer: {
-    position: 'relative',
+    alignItems: 'center',
     marginBottom: 20,
-    marginTop: 50, // Espaçamento abaixo da imagem
   },
   profilePicture: {
     width: 158,
     height: 158,
-    borderRadius: 79, // Tornando a imagem circular
-    borderWidth: 3,
-    borderColor: '#ddd',
+    borderRadius: 79,
   },
   changePictureButton: {
     position: 'absolute',
     bottom: 10,
     right: 10,
-    backgroundColor: '#30A7EB',
+    backgroundColor: '#FF9D00',
     borderRadius: 50,
-    padding: 8,
+    padding: 10,
   },
   usernameContainer: {
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
   },
@@ -293,59 +267,65 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    width: 300,
     padding: 20,
+    backgroundColor: 'white',
     borderRadius: 10,
-    width: '80%',
   },
   usernameInput: {
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
-    marginBottom: 15,
-    paddingVertical: 10,
+    marginBottom: 20,
+    paddingHorizontal: 10,
     fontSize: 16,
   },
   updateButton: {
-    backgroundColor: '#30A7EB',
+    backgroundColor: '#FF9D00',
     paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 5,
-    justifyContent: 'center',
+    borderRadius: 8,
     alignItems: 'center',
   },
   updateButtonText: {
-    color: '#fff',
+    color: 'white',
     fontSize: 16,
-    textAlign: 'center',
   },
   closeButton: {
     marginTop: 10,
-    backgroundColor: '#FF9D00',
-    paddingVertical: 12,
-    borderRadius: 5,
-    justifyContent: 'center',
     alignItems: 'center',
   },
   closeButtonText: {
-    color: '#fff',
+    color: '#FF9D00',
     fontSize: 16,
-    textAlign: 'center',
   },
   lugaresTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 10,
   },
   placeItem: {
-    padding: 10,
-    marginBottom: 5,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 5,
-    width: '90%',
+    flexDirection: 'row',
+    marginBottom: 15,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#f9f9f9',
   },
-  placeText: {
-    fontSize: 16,
+  placeImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 8,
+  },
+  placeInfo: {
+    flex: 1,
+    padding: 10,
+  },
+  placeTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  placeDescription: {
+    marginTop: 5,
+    color: '#555',
   },
 });
 
-export default UserProfileScreen;
+export default ProfileScreen;
