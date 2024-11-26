@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ImageBackground, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ImageBackground, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { supabase } from '../configs/Supabase';
 
-const PAGE_SIZE = 9;
+const PAGE_SIZE = 20;
 
 const Feed = ({ onPostPress }) => {
   const [posts, setPosts] = useState([]);
@@ -10,10 +10,11 @@ const Feed = ({ onPostPress }) => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    fetchPosts();
-  }, []);
+    fetchPosts(currentPage);
+  }, [currentPage]);
 
   const fetchPosts = async (page = 1) => {
     if (page === 1) {
@@ -45,15 +46,16 @@ const Feed = ({ onPostPress }) => {
     } finally {
       setLoading(false);
       setLoadingMore(false);
+      setRefreshing(false);
     }
   };
 
-  const handleLoadMore = () => {
-    if (hasMore && !loadingMore) {
-      const nextPage = currentPage + 1;
-      setCurrentPage(nextPage);
-      fetchPosts(nextPage);
-    }
+  const onRefresh = () => {
+    setRefreshing(true);
+    setCurrentPage(1);
+    setHasMore(true);
+    setPosts([]);
+    fetchPosts(1);
   };
 
   const renderPost = ({ item }) => (
@@ -88,19 +90,30 @@ const Feed = ({ onPostPress }) => {
   }
 
   return (
-    <FlatList
-      data={posts}
-      keyExtractor={(item) => item.id.toString()}
-      renderItem={renderPost}
-      contentContainerStyle={styles.feedContainer}
-      onEndReached={handleLoadMore}
-      onEndReachedThreshold={0.5}
-      ListFooterComponent={loadingMore && <ActivityIndicator size="small" color="#FF9D00" />}
-    />
+    <View style={styles.container}>
+      <FlatList
+        data={posts}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderPost}
+        contentContainerStyle={styles.feedContainer}
+        onEndReached={() => {
+          if (hasMore && !loadingMore) {
+            setCurrentPage(currentPage + 1);
+          }
+        }}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={loadingMore && <ActivityIndicator size="small" color="#FF9D00" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   feedContainer: {
     padding: 10,
   },

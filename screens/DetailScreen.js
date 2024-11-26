@@ -13,11 +13,9 @@ export default function DetailScreen({ route }) {
     );
   }
 
-  // Validando as coordenadas de latitude e longitude
   let latitude = post?.latitude ? parseFloat(post.latitude) : null;
   let longitude = post?.longitude ? parseFloat(post.longitude) : null;
 
-  // Validando se as coordenadas são números válidos e estão no intervalo correto
   const isLocationValid =
     latitude !== null &&
     longitude !== null &&
@@ -28,11 +26,10 @@ export default function DetailScreen({ route }) {
     longitude >= -180 &&
     longitude <= 180;
 
-  // Caso as coordenadas sejam inválidas, mostrar um alerta e usar coordenadas padrão
   if (!isLocationValid) {
     Alert.alert('Erro', 'Latitude ou Longitude inválida');
-    latitude = -23.55052;  // São Paulo (default)
-    longitude = -46.633308; // São Paulo (default)
+    latitude = -23.55052;
+    longitude = -46.633308;
   }
 
   const imageUri = post?.image || 'https://via.placeholder.com/400x200.png?text=Sem+Imagem';
