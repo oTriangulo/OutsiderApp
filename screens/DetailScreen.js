@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, Alert } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
 export default function DetailScreen({ route }) {
@@ -13,12 +13,32 @@ export default function DetailScreen({ route }) {
     );
   }
 
+  // Validando as coordenadas de latitude e longitude
+  let latitude = post?.latitude ? parseFloat(post.latitude) : null;
+  let longitude = post?.longitude ? parseFloat(post.longitude) : null;
+
+  // Validando se as coordenadas são números válidos e estão no intervalo correto
+  const isLocationValid =
+    latitude !== null &&
+    longitude !== null &&
+    !isNaN(latitude) &&
+    !isNaN(longitude) &&
+    latitude >= -90 &&
+    latitude <= 90 &&
+    longitude >= -180 &&
+    longitude <= 180;
+
+  // Caso as coordenadas sejam inválidas, mostrar um alerta e usar coordenadas padrão
+  if (!isLocationValid) {
+    Alert.alert('Erro', 'Latitude ou Longitude inválida');
+    latitude = -23.55052;  // São Paulo (default)
+    longitude = -46.633308; // São Paulo (default)
+  }
+
   const imageUri = post?.image || 'https://via.placeholder.com/400x200.png?text=Sem+Imagem';
   const title = post?.title || 'Sem título';
   const description = post?.description || 'Sem descrição';
   const createdAt = post?.created_at || 'Data não disponível';
-  const latitude = post?.latitude || 0;
-  const longitude = post?.longitude || 0;
 
   return (
     <View style={styles.container}>
@@ -26,7 +46,20 @@ export default function DetailScreen({ route }) {
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>{description}</Text>
       <Text style={styles.date}>Publicado em: {new Date(createdAt).toLocaleDateString()}</Text>
-  
+      
+      {isLocationValid && (
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: latitude,
+            longitude: longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          }}
+        >
+          <Marker coordinate={{ latitude, longitude }} />
+        </MapView>
+      )}
     </View>
   );
 }
@@ -65,5 +98,6 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
     borderRadius: 10,
+    marginTop: 20,
   },
 });
