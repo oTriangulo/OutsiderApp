@@ -1,95 +1,69 @@
-import React, { useState, useEffect } from 'react';
-import { FlatList, Text, View, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
-import { supabase } from '../configs/Supabase';
+import React from 'react';
+import { View, Text, Image, StyleSheet } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 
-const PAGE_SIZE = 9;
+export default function DetailScreen({ route }) {
+  const { post } = route.params;
 
-const HomeScreen = ({ navigation }) => {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  if (!post) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>Post não encontrado!</Text>
+      </View>
+    );
+  }
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('posts')
-          .select('id, title, description, image')
-          .limit(PAGE_SIZE);
-
-        if (error) throw error;
-        setPosts(data);
-      } catch (error) {
-        console.error("Erro ao carregar posts:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPosts();
-  }, []);
-
-  const renderPost = ({ item }) => (
-    <TouchableOpacity
-      style={styles.postContainer}
-      onPress={() =>
-        navigation.navigate('Detail', { postId: item.id })
-      }
-    >
-      <ImageBackground
-        source={{ uri: item.image }}
-        style={styles.imageBackground}
-      >
-        <View style={styles.overlay}>
-          <Text style={styles.postTitle}>{item.title}</Text>
-          <Text style={styles.postDescription}>{item.description}</Text>
-        </View>
-      </ImageBackground>
-    </TouchableOpacity>
-  );
+  const imageUri = post?.image || 'https://via.placeholder.com/400x200.png?text=Sem+Imagem';
+  const title = post?.title || 'Sem título';
+  const description = post?.description || 'Sem descrição';
+  const createdAt = post?.created_at || 'Data não disponível';
+  const latitude = post?.latitude || 0;
+  const longitude = post?.longitude || 0;
 
   return (
     <View style={styles.container}>
-      {loading ? (
-        <Text>Carregando...</Text>
-      ) : (
-        <FlatList
-          data={posts}
-          renderItem={renderPost}
-          keyExtractor={(item) => item.id.toString()}
-        />
-      )}
+      <Image source={{ uri: imageUri }} style={styles.image} />
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.description}>{description}</Text>
+      <Text style={styles.date}>Publicado em: {new Date(createdAt).toLocaleDateString()}</Text>
+  
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 10,
+    backgroundColor: '#fff',
   },
-  postContainer: {
-    marginBottom: 10,
-    borderRadius: 10,
-    overflow: 'hidden',
+  errorText: {
+    fontSize: 18,
+    color: 'red',
+    textAlign: 'center',
   },
-  imageBackground: {
+  image: {
     width: '100%',
     height: 200,
-    justifyContent: 'flex-end',
+    borderRadius: 10,
+    marginBottom: 10,
   },
-  overlay: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: 10,
-  },
-  postTitle: {
-    fontSize: 18,
+  title: {
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
+    marginBottom: 5,
   },
-  postDescription: {
-    fontSize: 14,
-    color: '#ccc',
+  description: {
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  date: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 10,
+  },
+  map: {
+    flex: 1,
+    borderRadius: 10,
   },
 });
-
-export default HomeScreen;

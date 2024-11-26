@@ -1,33 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, Button, TouchableOpacity, Alert, ActivityIndicator, TextInput, Modal, FlatList } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  TextInput,
+  Modal,
+  FlatList,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { launchImageLibrary } from 'react-native-image-picker';
-import { supabase } from '../configs/Supabase'; // Importação do Supabase
+import { supabase } from '../configs/Supabase';
+import FeedProfile from '../components/FeedProfile'; // Importando o componente
 
 const ProfileScreen = ({ navigation }) => {
   const [profilePicture, setProfilePicture] = useState('https://via.placeholder.com/158');
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('');
-  const [newUsername, setNewUsername] = useState(''); // Estado para o novo nome de usuário
-  const [modalVisible, setModalVisible] = useState(false); // Estado para controlar a visibilidade do modal
-  const [places, setPlaces] = useState([]); // Estado para armazenar os lugares registrados
+  const [newUsername, setNewUsername] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [places, setPlaces] = useState([]);
+  const [feedData, setFeedData] = useState([]); // Dados para o componente FeedProfile
 
   useEffect(() => {
     const loadUserProfile = async () => {
       const user = supabase.auth.user();
       if (user) {
         try {
-          // Carregar o nome de usuário e a foto de perfil do banco de dados
+          // Carregar o nome de usuário e foto de perfil
           const { data, error } = await supabase
             .from('profiles')
             .select('username, profile_picture')
             .eq('id', user.id)
-            .single(); // Garantir que pegue apenas 1 resultado
+            .single();
 
           if (error) throw error;
 
           setUsername(data.username);
-          setProfilePicture(data.profile_picture || 'https://via.placeholder.com/158'); // Foto de perfil
+          setProfilePicture(data.profile_picture || 'https://via.placeholder.com/158');
 
           // Carregar os lugares registrados pelo usuário
           const { data: placesData, error: placesError } = await supabase
@@ -37,7 +50,17 @@ const ProfileScreen = ({ navigation }) => {
 
           if (placesError) throw placesError;
 
-          setPlaces(placesData); // Atualiza o estado com os lugares registrados
+          setPlaces(placesData);
+
+          // Carregar dados do feed
+          const { data: feedDataResponse, error: feedError } = await supabase
+            .from('feed')
+            .select('*')
+            .eq('user_id', user.id);
+
+          if (feedError) throw feedError;
+
+          setFeedData(feedDataResponse);
         } catch (error) {
           Alert.alert('Erro ao carregar dados', error.message);
         }
@@ -49,32 +72,24 @@ const ProfileScreen = ({ navigation }) => {
     loadUserProfile();
   }, []);
 
-  // Função para selecionar e fazer upload de imagem
   const handleChangeProfilePicture = async () => {
     try {
       const result = await launchImageLibrary({ mediaType: 'photo' });
-
-      if (result.didCancel) return; // Usuário cancelou a seleção
-      if (result.errorMessage) {
-        Alert.alert('Erro', result.errorMessage);
-        return;
-      }
+      if (result.didCancel) return;
 
       const { uri } = result.assets[0];
-
-      setLoading(true); // Mostrar carregamento
+      setLoading(true);
 
       const response = await uploadImageToSupabase(uri);
-
       if (response) {
-        setProfilePicture(response); // Atualiza a foto no estado local
-        await updateProfilePictureInDatabase(response); // Atualiza no banco de dados
+        setProfilePicture(response);
+        await updateProfilePictureInDatabase(response);
         Alert.alert('Sucesso', 'Foto de perfil atualizada com sucesso!');
       }
     } catch (error) {
       Alert.alert('Erro', error.message);
     } finally {
-      setLoading(false); // Finaliza o carregamento
+      setLoading(false);
     }
   };
 
@@ -158,30 +173,27 @@ const ProfileScreen = ({ navigation }) => {
     <FlatList
       ListHeaderComponent={
         <>
-          {/* Ícone de seta no canto superior esquerdo */}
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => navigation.goBack()} // Navegar para a tela anterior
+            onPress={() => navigation.goBack()}
           >
             <Ionicons name="arrow-back" size={32} color="#30A7EB" />
           </TouchableOpacity>
 
           <View style={styles.profileContainer}>
-            <Image
-              source={{ uri: profilePicture }}
-              style={styles.profilePicture}
-            />
+            <Image source={{ uri: profilePicture }} style={styles.profilePicture} />
             <TouchableOpacity style={styles.changePictureButton} onPress={handleChangeProfilePicture}>
-              {loading ? <ActivityIndicator size="small" color="#fff" /> : <Ionicons name="camera" size={24} color="#fff" />}
+              {loading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Ionicons name="camera" size={24} color="#fff" />
+              )}
             </TouchableOpacity>
           </View>
 
           <View style={styles.usernameContainer}>
             <Text style={styles.userName}>{username}</Text>
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => setModalVisible(true)}
-            >
+            <TouchableOpacity style={styles.editButton} onPress={() => setModalVisible(true)}>
               <Ionicons name="pencil" size={24} color="#FF9D00" />
             </TouchableOpacity>
           </View>
@@ -211,6 +223,9 @@ const ProfileScreen = ({ navigation }) => {
           </Modal>
 
           <Text style={styles.lugaresTitle}>Lugares Registrados</Text>
+
+          {/* Adicionando o FeedProfile */}
+          <FeedProfile data={feedData} />
         </>
       }
       data={places}
@@ -219,10 +234,10 @@ const ProfileScreen = ({ navigation }) => {
     />
   );
 };
-
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    flex: 1,
+    backgroundColor: '#fff',
   },
   backButton: {
     position: 'absolute',

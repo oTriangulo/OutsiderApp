@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ImageBackground, ActivityIndicator, Alert } from 'react-native';
 import { supabase } from '../configs/Supabase';
 
-const PAGE_SIZE = 9; // Máximo de posts por página
+const PAGE_SIZE = 9;
 
-const Feed = ({ navigation }) => {
+const Feed = ({ onPostPress }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true); // Indica se há mais posts para carregar
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
-    fetchPosts(); // Busca inicial dos posts
+    fetchPosts();
   }, []);
 
   const fetchPosts = async (page = 1) => {
@@ -26,19 +26,17 @@ const Feed = ({ navigation }) => {
       const from = (page - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 
-      // Busca posts paginados no Supabase
       const { data: postsData, error } = await supabase
         .from('posts')
-        .select('id, title, description, image, user_id')
+        .select('id, title, description, image, created_at, latitude, longitude')
         .range(from, to);
 
       if (error) {
-        console.error('Erro ao buscar posts:', error.message);
         throw new Error('Erro ao carregar posts.');
       }
 
       if (postsData.length < PAGE_SIZE) {
-        setHasMore(false); // Não há mais posts para carregar
+        setHasMore(false);
       }
 
       setPosts((prevPosts) => (page === 1 ? postsData : [...prevPosts, ...postsData]));
@@ -59,12 +57,7 @@ const Feed = ({ navigation }) => {
   };
 
   const renderPost = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.postContainer}
-      onPress={() =>
-        navigation.navigate('DetailScreen', { postId: item.id })
-      }
-    >
+    <TouchableOpacity style={styles.postContainer} onPress={() => onPostPress(item)}>
       <ImageBackground
         source={{ uri: item.image || 'https://via.placeholder.com/400x200.png?text=Sem+Imagem' }}
         style={styles.imageBackground}
@@ -100,11 +93,9 @@ const Feed = ({ navigation }) => {
       keyExtractor={(item) => item.id.toString()}
       renderItem={renderPost}
       contentContainerStyle={styles.feedContainer}
-      onEndReached={handleLoadMore} // Chama mais posts ao alcançar o final
-      onEndReachedThreshold={0.5} // Define quando carregar (50% do final da lista)
-      ListFooterComponent={
-        loadingMore ? <ActivityIndicator size="small" color="#FF9D00" /> : null
-      }
+      onEndReached={handleLoadMore}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={loadingMore && <ActivityIndicator size="small" color="#FF9D00" />}
     />
   );
 };
@@ -113,42 +104,21 @@ const styles = StyleSheet.create({
   feedContainer: {
     padding: 10,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#888',
-  },
   postContainer: {
     marginBottom: 10,
     borderRadius: 10,
     overflow: 'hidden',
-    elevation: 2, // Para Android
-    shadowColor: '#000', // Para iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
   imageBackground: {
     width: '100%',
-    height: 200, // Altura do post
-    justifyContent: 'flex-end', // Alinha título e descrição na parte inferior
+    height: 200,
+    justifyContent: 'flex-end',
   },
   imageStyle: {
-    borderRadius: 10, // Bordas arredondadas
+    borderRadius: 10,
   },
   overlay: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Sobreposição escura
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     padding: 10,
   },
   postTitle: {
@@ -159,6 +129,20 @@ const styles = StyleSheet.create({
   postDescription: {
     fontSize: 14,
     color: '#ccc',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#888',
   },
 });
 

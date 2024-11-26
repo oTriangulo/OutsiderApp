@@ -15,10 +15,11 @@ const HomeScreen = ({ navigation }) => {
   };
 
   // Função de navegação para detalhes de um post
-  const handlePostPress = (postId) => {
-    // Navega para a tela de detalhes do post, passando o postId
-    navigation.navigate('Detail', { postId });
+  const handlePostPress = (post) => {
+    // Navega para a tela de detalhes do post, passando os dados completos do post
+    navigation.navigate('DetailScreen', { post });
   };
+  
 
   return (
     <View style={styles.container}>
@@ -31,7 +32,7 @@ const HomeScreen = ({ navigation }) => {
       </TouchableOpacity>
 
       {/* Feed de Posts */}
-      <Feed navigation={navigation} onPostPress={handlePostPress} /> 
+      <Feed navigation={navigation} onPostPress={handlePostPress} />
       {/* Passando a função para o Feed, que pode chamar handlePostPress quando um post for clicado */}
 
       {/* Botão para Criar Post */}

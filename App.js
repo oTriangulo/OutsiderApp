@@ -20,7 +20,7 @@ const Drawer = createDrawerNavigator();
 const DrawerNavigator = () => (
   <Drawer.Navigator>
     <Drawer.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-    <Drawer.Screen name="Profile" component={ProfileScreen} />
+    <Drawer.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
     <Drawer.Screen name="CreatePost" component={CreatePostScreen} />
   </Drawer.Navigator>
 );
@@ -70,7 +70,7 @@ export default function App() {
 
         {/* Tela de detalhes do post */}
         <Stack.Screen 
-          name="Detail" 
+          name="DetailScreen"  // Nome corrigido
           component={DetailScreen} 
           options={{ title: "Detalhes do Post" }} 
         />

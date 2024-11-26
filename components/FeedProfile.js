@@ -47,7 +47,7 @@ const FeedProfile = ({ navigation }) => {
       // Busca posts paginados no Supabase, filtrando pelo userId
       const { data: postsData, error } = await supabase
         .from('posts')
-        .select('id, title, description, image, user_id')
+        .select('id, title, description, image, user_id, created_at, latitude, longitude')
         .eq('user_id', userId)
         .range(from, to);
 
@@ -86,6 +86,9 @@ const FeedProfile = ({ navigation }) => {
           title: item.title,
           description: item.description,
           image: item.image,
+          createdAt: item.created_at,
+          latitude: item.latitude,
+          longitude: item.longitude,
         })
       }
     >
