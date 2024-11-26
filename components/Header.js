@@ -1,10 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { supabase } from '../configs/Supabase'; // Importação do Supabase
 
 const Header = () => {
   const navigation = useNavigation();
+  const [searchTerm, setSearchTerm] = useState(''); // Estado para armazenar o termo de pesquisa
+
+  // Função para buscar posts pelo termo de pesquisa
+  const handleSearch = async () => {
+    if (searchTerm.trim() === '') {
+      return; // Não faz nada se o campo de pesquisa estiver vazio
+    }
+
+    try {
+      // Consulta ao Supabase para buscar posts pelo nome ou descrição parecidos
+      const { data, error } = await supabase
+        .from('posts') // Nome da tabela de posts
+        .select('*')
+        .ilike('name', `%${searchTerm}%`) // Pesquisa pelo nome (insensível a maiúsculas)
+        .or(`description.ilike.%${searchTerm}%`); // Pesquisa pela descrição
+
+      if (error) {
+        console.error('Erro ao buscar posts:', error.message);
+        return;
+      }
+
+      // Navegar para a tela de resultados com os dados encontrados
+      navigation.navigate('SearchResults', { searchResults: data });
+    } catch (error) {
+      console.error('Erro ao buscar posts:', error.message);
+    }
+  };
 
   return (
     <View style={styles.header}>
@@ -17,6 +45,9 @@ const Header = () => {
       <TextInput
         placeholder="Pesquisar..."
         style={styles.searchInput}
+        value={searchTerm}
+        onChangeText={setSearchTerm}
+        onSubmitEditing={handleSearch} // Chama a função de pesquisa ao pressionar "Enter"
       />
 
       {/* Botão de Perfil */}

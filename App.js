@@ -1,6 +1,6 @@
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
@@ -9,9 +9,11 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import HomeScreen from './screens/HomeScreen';
 import LoginScreen from './screens/LoginScreen';
 import ProfileScreen from './screens/ProfileScreen';
-import PlaceRegisterScreen from './screens/PlaceRegisterScreen';
+import SignUpScreen from './screens/SignUpScreen';
 import CreatePostScreen from './screens/CreatePostScreen';
-import DetailScreen from './screens/DetailScreen'; // Atualizado para importar a tela correta
+import DetailScreen from './screens/DetailScreen';
+import FeedProfile from './components/FeedProfile';
+import SearchResultsScreen from './screens/SearchResultsScreen';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -19,9 +21,31 @@ const Drawer = createDrawerNavigator();
 // Navegação do Drawer
 const DrawerNavigator = () => (
   <Drawer.Navigator>
-    <Drawer.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-    <Drawer.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
-    <Drawer.Screen name="CreatePost" component={CreatePostScreen} />
+    <Drawer.Screen
+      name="Home"
+      component={HomeScreen}
+      options={{ headerShown: false }}
+    />
+    <Drawer.Screen
+      name="Profile"
+      component={ProfileScreen}
+      options={{ headerShown: false }}
+    />
+    <Drawer.Screen
+      name="CreatePost"
+      component={CreatePostScreen}
+      options={{ title: 'Criar Post' }}
+    />
+    <Drawer.Screen
+      name="FeedProfile"
+      component={FeedProfile}
+      options={{ headerShown: false }}
+    />
+    <Drawer.Screen
+      name="SearchResults"
+      component={SearchResultsScreen}
+      options={{ title: 'Resultados da Pesquisa' }}
+    />
   </Drawer.Navigator>
 );
 
@@ -36,7 +60,7 @@ export default function App() {
         const token = await AsyncStorage.getItem('userToken');
         setUserToken(token);
       } catch (e) {
-        console.error("Erro checando o status de login", e);
+        console.error('Erro checando o status de login:', e);
       } finally {
         setLoading(false);
       }
@@ -55,24 +79,46 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName={userToken ? "Drawer" : "Login"}>
+      <Stack.Navigator initialRouteName={userToken ? 'Drawer' : 'Login'}>
         {/* Tela de Login */}
-        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-        
-        {/* Menu Lateral */}
-        <Stack.Screen name="Drawer" component={DrawerNavigator} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{ headerShown: false }}
+        />
+
+        {/* Menu Lateral (Drawer) */}
+        <Stack.Screen
+          name="Drawer"
+          component={DrawerNavigator}
+          options={{ headerShown: false }}
+        />
 
         {/* Outras telas */}
-        <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Signup" component={PlaceRegisterScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="CreatePost" component={CreatePostScreen} options={{ headerShown: false }} />
-
-        {/* Tela de detalhes do post */}
-        <Stack.Screen 
-          name="DetailScreen"  // Nome corrigido
-          component={DetailScreen} 
-          options={{ title: "Detalhes do Post" }} 
+        <Stack.Screen
+          name="Signup"
+          component={SignUpScreen}
+          options={{ title: 'Cadastro' }}
+        />
+        <Stack.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{ title: 'Perfil' }}
+        />
+        <Stack.Screen
+          name="CreatePost"
+          component={CreatePostScreen}
+          options={{ title: 'Criar Post' }}
+        />
+        <Stack.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{ title: 'Página Inicial' }}
+        />
+        <Stack.Screen
+          name="DetailScreen"
+          component={DetailScreen}
+          options={{ title: 'Detalhes do Post' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

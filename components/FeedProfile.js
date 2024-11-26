@@ -1,39 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ImageBackground, ActivityIndicator, Alert, ScrollView } from 'react-native';
-import { supabase } from '../configs/Supabase';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ImageBackground, ActivityIndicator, Alert } from 'react-native';
+import { supabase } from '../configs/Supabase'; // Certifique-se de que o supabase está configurado corretamente
 
-const PAGE_SIZE = 9; // Máximo de posts por página
+const PAGE_SIZE = 9;
 
-const FeedProfile = ({ navigation }) => {
+const Feed = ({ onPostPress }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true); // Indica se há mais posts para carregar
-  const [userId, setUserId] = useState(null); // ID do usuário autenticado
+  const [hasMore, setHasMore] = useState(true);
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
-    fetchUserId(); // Obter o ID do usuário autenticado
+    const fetchUserId = async () => {
+      const user = supabase.auth.user(); // Obtém o usuário logado
+      console.log('User Logado:', user); // Verifique o objeto do usuário
+      if (user) {
+        setUserId(user.id); // Armazena o user_id
+        fetchPosts(user.id, 1); // Chama a função de busca passando o user_id
+      } else {
+        Alert.alert('Erro', 'Usuário não autenticado');
+      }
+    };
+  
+    fetchUserId();
   }, []);
 
-  const fetchUserId = async () => {
-    try {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
-      if (error) {
-        console.error('Erro ao obter usuário:', error.message);
-        throw new Error('Erro ao autenticar o usuário.');
-      }
-      setUserId(user.id); // Define o ID do usuário autenticado
-      fetchPosts(1, user.id); // Busca inicial dos posts para o usuário
-    } catch (error) {
-      Alert.alert('Erro', error.message);
-    }
-  };
+  const fetchPosts = async (userId, page = 1) => {
+    if (!userId) return; // Verifica se o userId está presente
 
-  const fetchPosts = async (page = 1, userId) => {
     if (page === 1) {
       setLoading(true);
     } else {
@@ -44,20 +40,23 @@ const FeedProfile = ({ navigation }) => {
       const from = (page - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 
-      // Busca posts paginados no Supabase, filtrando pelo userId
+      console.log('Buscando posts para o usuário:', userId); // Verifique o user_id
+
+      // Consulta filtrando pelos posts do usuário logado
       const { data: postsData, error } = await supabase
         .from('posts')
-        .select('id, title, description, image, user_id, created_at, latitude, longitude')
-        .eq('user_id', userId)
+        .select('id, title, description, image, created_at, latitude, longitude')
+        .eq('user_id', userId) // Filtrando pelo user_id
         .range(from, to);
 
       if (error) {
-        console.error('Erro ao buscar posts:', error.message);
         throw new Error('Erro ao carregar posts.');
       }
 
+      console.log('Posts retornados:', postsData); // Verifique os posts retornados
+
       if (postsData.length < PAGE_SIZE) {
-        setHasMore(false); // Não há mais posts para carregar
+        setHasMore(false);
       }
 
       setPosts((prevPosts) => (page === 1 ? postsData : [...prevPosts, ...postsData]));
@@ -70,28 +69,15 @@ const FeedProfile = ({ navigation }) => {
   };
 
   const handleLoadMore = () => {
-    if (hasMore && !loadingMore && userId) {
+    if (hasMore && !loadingMore) {
       const nextPage = currentPage + 1;
       setCurrentPage(nextPage);
-      fetchPosts(nextPage, userId);
+      fetchPosts(userId, nextPage); // Passa o userId junto com a página
     }
   };
 
   const renderPost = ({ item }) => (
-    <TouchableOpacity
-      style={styles.postContainer}
-      onPress={() =>
-        navigation.navigate('Detail', {
-          postId: item.id,
-          title: item.title,
-          description: item.description,
-          image: item.image,
-          createdAt: item.created_at,
-          latitude: item.latitude,
-          longitude: item.longitude,
-        })
-      }
-    >
+    <TouchableOpacity style={styles.postContainer} onPress={() => onPostPress(item)}>
       <ImageBackground
         source={{ uri: item.image || 'https://via.placeholder.com/400x200.png?text=Sem+Imagem' }}
         style={styles.imageBackground}
@@ -127,26 +113,10 @@ const FeedProfile = ({ navigation }) => {
       keyExtractor={(item) => item.id.toString()}
       renderItem={renderPost}
       contentContainerStyle={styles.feedContainer}
-      onEndReached={handleLoadMore} // Chama mais posts ao alcançar o final
-      onEndReachedThreshold={0.5} // Define quando carregar (50% do final da lista)
-      ListFooterComponent={
-        loadingMore ? <ActivityIndicator size="small" color="#FF9D00" /> : null
-      }
+      onEndReached={handleLoadMore}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={loadingMore && <ActivityIndicator size="small" color="#FF9D00" />}
     />
-  );
-};
-
-const ProfileScreen = ({ navigation }) => {
-  return (
-    <ScrollView contentContainerStyle={stylesFeed.container}>
-      <View style={stylesFeed.header}>
-        <Text style={stylesFeed.title}>Meu Perfil</Text>
-        {/* Adicione aqui outras informações do usuário, se necessário */}
-      </View>
-
-      {/* Componente FeedProfile que exibe os posts do usuário */}
-      <FeedProfile navigation={navigation} />
-    </ScrollView>
   );
 };
 
@@ -154,42 +124,21 @@ const styles = StyleSheet.create({
   feedContainer: {
     padding: 10,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#888',
-  },
   postContainer: {
     marginBottom: 10,
     borderRadius: 10,
     overflow: 'hidden',
-    elevation: 2, // Para Android
-    shadowColor: '#000', // Para iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
   imageBackground: {
     width: '100%',
-    height: 200, // Altura do post
-    justifyContent: 'flex-end', // Alinha título e descrição na parte inferior
+    height: 200,
+    justifyContent: 'flex-end',
   },
   imageStyle: {
-    borderRadius: 10, // Bordas arredondadas
+    borderRadius: 10,
   },
   overlay: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Sobreposição escura
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     padding: 10,
   },
   postTitle: {
@@ -201,25 +150,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ccc',
   },
-});
-
-const stylesFeed = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    padding: 20,
-    backgroundColor: '#FF9D00',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#888',
   },
 });
 
-export default FeedProfile;
+export default Feed;
