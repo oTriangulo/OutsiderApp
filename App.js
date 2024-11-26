@@ -12,7 +12,6 @@ import ProfileScreen from './screens/ProfileScreen';
 import SignUpScreen from './screens/SignUpScreen';
 import CreatePostScreen from './screens/CreatePostScreen';
 import DetailScreen from './screens/DetailScreen';
-import FeedProfile from './components/FeedProfile';
 import SearchResultsScreen from './screens/SearchResultsScreen';
 
 const Stack = createNativeStackNavigator();
@@ -35,11 +34,6 @@ const DrawerNavigator = () => (
       name="CreatePost"
       component={CreatePostScreen}
       options={{ title: 'Criar Post' }}
-    />
-    <Drawer.Screen
-      name="FeedProfile"
-      component={FeedProfile}
-      options={{ headerShown: false }}
     />
     <Drawer.Screen
       name="SearchResults"
