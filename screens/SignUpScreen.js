@@ -1,8 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Button, Image, StyleSheet } from 'react-native';
-import { supabase } from '../configs/Supabase'; // Certifique-se de que esse caminho está correto.
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Button,
+  Image,
+  StyleSheet,
+} from 'react-native';
+import { supabase } from '../configs/Supabase';
 import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/Ionicons';
+import uuid from 'react-native-uuid';
 
 const SignUpScreen = ({ navigation }) => {
   const [username, setUsername] = useState('');
@@ -11,6 +20,7 @@ const SignUpScreen = ({ navigation }) => {
   const [profilePicture, setProfilePicture] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Selecionar uma imagem
   const pickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -20,14 +30,55 @@ const SignUpScreen = ({ navigation }) => {
         quality: 1,
       });
 
-      if (!result.canceled) {
-        setProfilePicture(result.uri); // Atualizado para 'canceled', que é usado no Expo mais recente.
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setProfilePicture(result.assets[0].uri);
       }
     } catch (error) {
       console.error('Erro ao selecionar imagem:', error);
     }
   };
 
+  // Fazer upload da imagem
+  const uploadImageToBucket = async (uri, userId) => {
+    try {
+      if (!uri) {
+        Alert.alert('Erro', 'Nenhuma imagem foi selecionada.');
+        return null;
+      }
+  
+      // Obter a extensão do arquivo
+      const fileExt = uri.split('.').pop();
+      const fileName = `${uuid.v4()}.${fileExt}`; // Nome único para o arquivo
+  
+      // Iniciar o upload para o Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('files')
+        .upload(`profile_pictures/${fileName}`, {
+          uri,
+          type: `image/${fileExt}`,
+          name: fileName,
+        });
+  
+      if (error) {
+        console.error('Erro no Supabase ao fazer upload:', error.message);
+        Alert.alert('Erro ao fazer upload', error.message);
+        return null;
+      }
+  
+      // Gerar URL pública da imagem no bucket
+      const { publicUrl } = supabase.storage
+        .from('files')
+        .getPublicUrl(`profile_pictures/${fileName}`).data;
+  
+      return publicUrl; // Retorna a URL pública do arquivo
+    } catch (error) {
+      console.error('Erro ao fazer upload:', error.message);
+      Alert.alert('Erro ao fazer upload', 'Verifique sua conexão e tente novamente.');
+      return null;
+    }
+  };
+
+  // Cadastrar usuário
   const signUp = async () => {
     try {
       if (!email || !password || !username) {
@@ -35,9 +86,6 @@ const SignUpScreen = ({ navigation }) => {
         return;
       }
 
-      console.log('Iniciando cadastro com email:', email);
-
-      // Cadastrar no Supabase Auth
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -48,23 +96,23 @@ const SignUpScreen = ({ navigation }) => {
         throw new Error('Erro ao criar conta. Verifique suas informações.');
       }
 
-      console.log('Resposta do signUp:', signUpData);
-
-      // Verificar se o usuário foi criado e obter o ID
       const user = signUpData?.user;
       if (!user || !user.id) {
         throw new Error('Usuário não encontrado após o cadastro.');
       }
 
-      console.log('Usuário autenticado com ID:', user.id);
+      let profilePicturePath = null;
 
-      // Inserir dados na tabela user_profiles
+      if (profilePicture) {
+        profilePicturePath = await uploadImageToBucket(profilePicture, user.id);
+      }
+
       const { error: profileError } = await supabase.from('user_profiles').insert([
         {
-          id: user.id, // ID do usuário autenticado
-          username: username,
-          email: email,
-          profile_picture: profilePicture || null,
+          id: user.id,
+          username,
+          email,
+          profile_picture: profilePicturePath,
         },
       ]);
 
@@ -73,9 +121,6 @@ const SignUpScreen = ({ navigation }) => {
         throw new Error('Erro ao salvar dados adicionais do perfil.');
       }
 
-      console.log('Dados do perfil salvos com sucesso.');
-
-      // Navegar para a tela de login após sucesso
       navigation.navigate('Login');
     } catch (error) {
       console.error('Erro no cadastro:', error.message || error);

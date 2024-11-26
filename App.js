@@ -120,6 +120,10 @@ export default function App() {
           component={DetailScreen}
           options={{ title: 'Detalhes do Post' }}
         />
+        <Stack.Screen name="SearchResults"
+        component={SearchResultsScreen} 
+        options={{ title: 'Resultados da Pesquisa' }} 
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
