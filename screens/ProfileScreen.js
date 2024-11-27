@@ -1,14 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../configs/Supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Importando AsyncStorage
 
 const ProfileScreen = ({ navigation }) => {
   const [profilePicture, setProfilePicture] = useState(null);
@@ -42,6 +36,23 @@ const ProfileScreen = ({ navigation }) => {
     loadUserProfile();
   }, []);
 
+  // Função de logout
+  const logout = async () => {
+    try {
+      // Limpa o AsyncStorage (onde armazenamos o token e outros dados)
+      await AsyncStorage.clear(); 
+
+      // Faz o logout do Supabase
+      await supabase.auth.signOut();
+
+      // Navega para a tela de Login
+      navigation.navigate('Login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error.message);
+      Alert.alert('Erro ao sair', 'Tente novamente.');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <TouchableOpacity
@@ -61,6 +72,10 @@ const ProfileScreen = ({ navigation }) => {
           <Text style={styles.username}>{username}</Text>
         </View>
       )}
+
+      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+        <Text style={styles.logoutText}>Sair</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -90,6 +105,17 @@ const styles = StyleSheet.create({
   username: {
     fontSize: 24,
     fontWeight: 'bold',
+  },
+  logoutButton: {
+    marginTop: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#30A7EB',
+    borderRadius: 5,
+  },
+  logoutText: {
+    color: 'white',
+    fontSize: 16,
   },
 });
 

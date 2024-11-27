@@ -31,9 +31,12 @@ const Header = () => {
 
   return (
     <View style={styles.header}>
+      {/* Ícone do menu lateral */}
       <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}>
-        <Icon name="menu" size={24} color="#000" style={styles.icon} />
+        <Icon name="menu" size={24} color="#30A7EB" style={styles.icon} />
       </TouchableOpacity>
+
+      {/* Barra de pesquisa */}
       <TextInput
         placeholder="Pesquisar..."
         style={styles.searchInput}
@@ -41,8 +44,10 @@ const Header = () => {
         onChangeText={setSearchTerm}
         onSubmitEditing={handleSearch}
       />
+
+      {/* Ícone de perfil */}
       <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-        <Icon name="person-circle" size={28} color="#000" style={styles.icon} />
+        <Icon name="person-circle" size={28} color="#30A7EB" style={styles.icon} />
       </TouchableOpacity>
     </View>
   );
@@ -54,12 +59,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 10,
     backgroundColor: '#fff',
-    elevation: 4,
+    elevation: 4, // Sombra (Android)
+    shadowColor: '#000', // Sombra (iOS)
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   searchInput: {
     flex: 1,
     height: 40,
-    borderColor: '#ccc',
+    borderColor: '#30A7EB', // Cor do contorno
     borderWidth: 1,
     borderRadius: 20,
     paddingHorizontal: 15,

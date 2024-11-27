@@ -102,7 +102,7 @@ const LoginScreen = ({ navigation }) => {
         </TouchableOpacity>
       )}
       <Text onPress={() => navigation.navigate('Signup')} style={styles.link}>
-        Não tem conta? Cadastre-se
+        Cadastre-se
       </Text>
     </View>
   );

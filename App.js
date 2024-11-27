@@ -23,17 +23,17 @@ const DrawerNavigator = () => (
     <Drawer.Screen
       name="Home"
       component={HomeScreen}
-      options={{ headerShown: false }}
+      options={{ headerShown: false, headerShown: false }}
     />
     <Drawer.Screen
       name="Profile"
       component={ProfileScreen}
-      options={{ headerShown: false }}
+      options={{ headerShown: false, headerShown: false }}
     />
     <Drawer.Screen
       name="CreatePost"
       component={CreatePostScreen}
-      options={{ title: 'Criar Post' }}
+      options={{ title: 'Criar Post', headerShown: false }}
     />
     <Drawer.Screen
       name="SearchResults"
@@ -92,22 +92,22 @@ export default function App() {
         <Stack.Screen
           name="Signup"
           component={SignUpScreen}
-          options={{ title: 'Cadastro' }}
+          options={{ title: 'Cadastro', headerShown: false }}
         />
         <Stack.Screen
           name="Profile"
           component={ProfileScreen}
-          options={{ title: 'Perfil' }}
+          options={{ title: 'Perfil', headerShown: false}}
         />
         <Stack.Screen
           name="CreatePost"
           component={CreatePostScreen}
-          options={{ title: 'Criar Post' }}
+          options={{ title: 'Criar Post', headerShown: false}}
         />
         <Stack.Screen
           name="Home"
           component={HomeScreen}
-          options={{ title: 'Página Inicial' }}
+          options={{ title: 'Página Inicial', headerShown: false }}
         />
         <Stack.Screen
           name="DetailScreen"

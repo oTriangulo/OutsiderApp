@@ -20,7 +20,6 @@ const SignUpScreen = ({ navigation }) => {
   const [profilePicture, setProfilePicture] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Selecionar uma imagem
   const pickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -38,7 +37,7 @@ const SignUpScreen = ({ navigation }) => {
     }
   };
 
-  // Fazer upload da imagem
+  // Função que faz o upload da imagem para dentro do bucket, a mesma função que é utilizada no login
   const uploadImageToBucket = async (uri, userId) => {
     try {
       if (!uri) {
@@ -46,20 +45,20 @@ const SignUpScreen = ({ navigation }) => {
         return null;
       }
   
-      // Obter a extensão do arquivo
+      // Const para configurar o nome do arquivo
       const fileExt = uri.split('.').pop();
-      const fileName = `${uuid.v4()}.${fileExt}`; // Nome único para o arquivo
+      const fileName = `${uuid.v4()}.${fileExt}`;
   
       // Iniciar o upload para o Supabase Storage
       const { data, error } = await supabase.storage
-        .from('files')
-        .upload(`profile_pictures/${fileName}`, {
+        .from('files') // nome do nosso bucket (importante, deu muito problema)
+        .upload(`profile_pictures/${fileName}`, { //definição de nome da pasta para fazer o upload
           uri,
           type: `image/${fileExt}`,
           name: fileName,
         });
   
-      if (error) {
+      if (error) { // se der erro no upload do arquivo, retorna null e mostra o erro
         console.error('Erro no Supabase ao fazer upload:', error.message);
         Alert.alert('Erro ao fazer upload', error.message);
         return null;
@@ -78,7 +77,7 @@ const SignUpScreen = ({ navigation }) => {
     }
   };
 
-  // Cadastrar usuário
+  // Função de cadastro do usuário
   const signUp = async () => {
     try {
       if (!email || !password || !username) {
@@ -131,6 +130,14 @@ const SignUpScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Registro</Text>
+      
+      <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+        <Text>Escolher Foto de Perfil</Text>
+      </TouchableOpacity>
+
+      {profilePicture && (
+        <Image source={{ uri: profilePicture }} style={styles.profileImage} />
+      )}
 
       <TextInput
         style={styles.input}
@@ -159,14 +166,6 @@ const SignUpScreen = ({ navigation }) => {
           <Icon name={showPassword ? 'eye-off' : 'eye'} size={24} color="gray" />
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-        <Text>Escolher Foto de Perfil</Text>
-      </TouchableOpacity>
-
-      {profilePicture && (
-        <Image source={{ uri: profilePicture }} style={styles.profileImage} />
-      )}
 
       <Button title="Registrar" onPress={signUp} />
 
