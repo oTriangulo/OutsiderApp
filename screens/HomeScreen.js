@@ -1,32 +1,27 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Header from '../components/Header';  
+import Header from '../components/Header';
 import Icon from 'react-native-vector-icons/Ionicons';
-import Feed from '../components/Feed'; 
+import Feed from '../components/Feed';
 
 const HomeScreen = ({ navigation }) => {
-  
-  // Função para logout
   const logout = async () => {
     await AsyncStorage.removeItem('userToken');
-    navigation.replace('Login'); 
+    navigation.replace('Login');
   };
 
-  // Função de navegação para detalhes de um post
   const handlePostPress = (post) => {
     navigation.navigate('DetailScreen', { post });
   };
-  
 
   return (
     <View style={styles.container}>
       <Header />
-      {/* Adiciona a frase "Lugares populares:" */}
       <Text style={styles.popularText}>Lugares populares:</Text>
       <Feed navigation={navigation} onPostPress={handlePostPress} />
-      <TouchableOpacity 
-        style={styles.addButton} 
+      <TouchableOpacity
+        style={styles.addButton}
         onPress={() => navigation.navigate('CreatePost')}
       >
         <Icon name="add" size={24} color="#FFF" />

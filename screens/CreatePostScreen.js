@@ -17,6 +17,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 
+
 const CreatePostScreen = ({ navigation }) => {
   const [image, setImage] = useState(null);
   const [title, setTitle] = useState('');
@@ -224,39 +225,43 @@ const CreatePostScreen = ({ navigation }) => {
       </View>
     );
   }
+  
+  const CustomButton = ({ title, onPress, iconName }) => (
+    <TouchableOpacity style={styles.buttonimage} onPress={onPress}>
+      <Icon name={iconName} size={20} color="#30A7EB" style={styles.icon} />
+      <Text style={styles.buttonTextimage}>{title}</Text>
+    </TouchableOpacity>
+  );
+  
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Icon name="chevron-left" size={44} color="#007bff" />
       </TouchableOpacity>
-
-      <Button title="Selecionar imagem da galeria" onPress={pickImage} />
-      <Button title="Tirar foto" onPress={takePhoto} />
-      {image && <Image source={{ uri: image }} style={styles.image} />}
-      {!image && <Image source={require('../assets/PlaceHolder.png')} style={styles.image} />}
-
+      <Text style={styles.locationText}>Título:</Text>
       <TextInput
         placeholder="Título"
         value={title}
         onChangeText={setTitle}
         style={styles.input}
       />
-      <TextInput
+    <Text style={styles.locationText}>Descrição:</Text>
+            <TextInput
         placeholder="Descrição"
         value={description}
         onChangeText={setDescription}
-        style={styles.input}
+        style={styles.inputdesc}
+        multiline={true}
+        numberOfLines={4}
       />
 
-      <TextInput
-        placeholder="Digite o endereço"
-        value={address}
-        onChangeText={setAddress}
-        style={styles.input}
-      />
-      <Button title="Buscar Endereço" onPress={handleSearchAddress} />
+      <CustomButton title="Selecionar imagem da galeria" onPress={pickImage} iconName="image" />
+      <CustomButton title="Tirar foto" onPress={takePhoto} iconName="camera" />
+      {image && <Image source={{ uri: image }} style={styles.image} />}
+      {!image && <Image source={require('../assets/PlaceHolder.png')} style={styles.image} />}
 
+      <Text style={styles.locationText}>Localização:</Text>
       <MapView
         style={styles.map}
         region={region}
@@ -266,7 +271,25 @@ const CreatePostScreen = ({ navigation }) => {
         <Marker coordinate={{ latitude: region.latitude, longitude: region.longitude }} />
       </MapView>
 
-      <Button title="Criar Post" onPress={createPost} />
+      <TextInput
+        placeholder="Digite o endereço"
+        value={address}
+        onChangeText={setAddress}
+        style={styles.inputMapper}
+      />
+      <TouchableOpacity
+      style={styles.button}
+      onPress={handleSearchAddress}>
+      <Text style={styles.ButtonText}>Buscar Endereço</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+  style={styles.orangeButton}
+  onPress={createPost}
+>
+  <Text style={styles.orangeButtonText}>Criar</Text>
+</TouchableOpacity>
+
     </ScrollView>
   );
 };
@@ -274,36 +297,103 @@ const CreatePostScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    paddingTop: 80,
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    padding: 10,
   },
   scrollContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
     padding: 20,
     paddingTop: 80,
+    backgroundColor: '#fff',
   },
-  input: {
-    height: 40,
+  button: {
+    backgroundColor: '#30A7EB',
+    padding: 10,
+    borderRadius: 20,
+    alignItems: 'center',
+    width: '60%',
+    alignSelf: 'center',
+  },
+  buttonimage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  icon: {
+    marginRight: 10,
+  },
+  inputMapper: {
+    height: 50,
     borderColor: '#30A7EB',
     borderWidth: 1,
     marginBottom: 12,
     paddingLeft: 8,
+    width: '90%',
+    borderRadius: 15, 
+    zIndex: 1,
+    backgroundColor: '#fff',   
+    alignSelf: 'center',
+  },
+  input: {
+    height: 40,
+    marginBottom: 12,
+    paddingLeft: 8,
     marginTop: 10,
     width: '100%',
-    borderRadius: 15, // Cantos arredondados
+    borderRadius: 15,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 2,
+    shadowRadius: 8,
+    elevation: 8,
+    textAlignVertical: 'top', // Faz o texto começar no topo da caixa
+    paddingRight: 8, // Adiciona um pouco de espaço à direita
+    borderColor: '#ddd', // Cor da borda
+    borderWidth: 1, // Adiciona a borda
+  },
+  inputdesc: {
+    height: 100,  
+    paddingLeft: 8,
+    paddingTop: 10,
+    marginBottom: 12,
+    marginTop: 10,
+    width: '100%',
+    borderRadius: 15,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+    textAlignVertical: 'top', 
+    paddingRight: 8, 
+    borderColor: '#ddd', 
+    borderWidth: 1, 
   },
   image: {
     width: 200,
     height: 200,
     marginTop: 20,
     borderRadius: 10,
+    alignSelf: 'center',
   },
   map: {
     width: '100%',
     height: 300,
-    marginTop: 20,
-    marginBottom: 20,
+    marginTop: 10,
+    marginBottom: -20,
   },
   backButton: {
     position: 'absolute',
@@ -311,6 +401,35 @@ const styles = StyleSheet.create({
     left: 20,
     zIndex: 10,
   },
+  orangeButton: {
+    backgroundColor: '#FFA500',
+    padding: 15,
+    borderRadius: 20,
+    alignItems: 'center',
+    marginTop: 20,
+    width: '30%',
+    alignSelf: 'center',
+  },
+  orangeButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 20,
+  },
+  ButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+  },
+  buttonTextimage: {
+    fontSize: 16,
+    color: '#333',
+  },
+  locationText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 10,
+    textAlign: 'left',
+  },
+  
 });
 
 export default CreatePostScreen;

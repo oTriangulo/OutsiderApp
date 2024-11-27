@@ -13,12 +13,12 @@ export default function DetailScreen({ route }) {
     );
   }
 
-  let latitude = post?.latitude ? parseFloat(post.latitude) : null;
-  let longitude = post?.longitude ? parseFloat(post.longitude) : null;
+  // Garantindo que latitude e longitude sejam floats e dentro do intervalo
+  let latitude = parseFloat(post.latitude) || 0;
+  let longitude = parseFloat(post.longitude) || 0;
 
+  // Verificação de validade das coordenadas
   const isLocationValid =
-    latitude !== null &&
-    longitude !== null &&
     !isNaN(latitude) &&
     !isNaN(longitude) &&
     latitude >= -90 &&
@@ -27,23 +27,28 @@ export default function DetailScreen({ route }) {
     longitude <= 180;
 
   if (!isLocationValid) {
-    Alert.alert('Erro', 'Latitude ou Longitude inválida');
-    latitude = -23.55052;
+    Alert.alert('Erro', 'Latitude ou Longitude inválida. Usando localização padrão.');
+    latitude = -23.55052; // Localização padrão (São Paulo)
     longitude = -46.633308;
   }
 
   const imageUri = post?.image || 'https://via.placeholder.com/400x200.png?text=Sem+Imagem';
   const title = post?.title || 'Sem título';
   const description = post?.description || 'Sem descrição';
-  const createdAt = post?.created_at || 'Data não disponível';
+  
+  // Formatando a data corretamente
+  const createdAt = post?.created_at ? new Date(post.created_at).toLocaleDateString() : 'Data não disponível';
+
+  // Debugging das coordenadas
+  console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
 
   return (
     <View style={styles.container}>
       <Image source={{ uri: imageUri }} style={styles.image} />
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>{description}</Text>
-      <Text style={styles.date}>Publicado em: {new Date(createdAt).toLocaleDateString()}</Text>
-      
+      <Text style={styles.date}>Publicado em: {createdAt}</Text>
+
       {isLocationValid && (
         <MapView
           style={styles.map}
@@ -56,6 +61,10 @@ export default function DetailScreen({ route }) {
         >
           <Marker coordinate={{ latitude, longitude }} />
         </MapView>
+      )}
+
+      {!isLocationValid && (
+        <Text style={styles.noLocationText}>Localização não disponível.</Text>
       )}
     </View>
   );
@@ -81,35 +90,26 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 5,
-    padding: 10,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: '#30A7EB',
     marginBottom: 10,
   },
   description: {
     fontSize: 16,
     marginBottom: 10,
-    padding: 10,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: '#30A7EB',
-    marginBottom: 10,
   },
   date: {
     fontSize: 12,
     color: '#666',
-    marginBottom: 10,
-    padding: 10,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: '#30A7EB',
     marginBottom: 20,
   },
   map: {
-    flex: 1,
+    height: 300, 
     borderRadius: 10,
     marginTop: 20,
+  },
+  noLocationText: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 10,
+    textAlign: 'center',
   },
 });

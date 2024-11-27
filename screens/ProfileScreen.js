@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../configs/Supabase';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Importando AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
 
 const ProfileScreen = ({ navigation }) => {
   const [profilePicture, setProfilePicture] = useState(null);

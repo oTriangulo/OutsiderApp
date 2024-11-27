@@ -3,19 +3,45 @@ import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from 'react
 
 const SearchResultsScreen = ({ route, navigation }) => {
   const { searchResults } = route.params;
-
-  const renderItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.resultItem}
-      onPress={() => navigation.navigate('DetailScreen', { post: item })}
-    >
-      <Image
-        source={{ uri: item.image || 'https://via.placeholder.com/50' }}
-        style={styles.thumbnail}
-      />
-      <Text style={styles.title}>{item.title}</Text>
-    </TouchableOpacity>
-  );
+  
+  const renderItem = ({ item }) => {
+    // Verifique os dados do item
+    const post = {
+      id: item.id,
+      title: item.title || "Sem Título",
+      description: item.description || "Sem Descrição",
+      image: item.image || 'https://via.placeholder.com/400x200.png?text=Sem+Imagem',
+      latitude: item.latitude || 0,  // Se não houver latitude, definimos 0 como padrão
+      longitude: item.longitude || 0,  // Se não houver longitude, definimos 0 como padrão
+      created_at: item.created_at || new Date().toISOString(),  // Se não houver data, usa a data atual
+    };
+  
+    // Log para depuração
+    console.log("Post item:", post);
+  
+    return (
+      <TouchableOpacity
+        style={styles.resultItem}
+        onPress={() => {
+          // Passando o post com todos os detalhes para a DetailScreen
+          navigation.navigate('DetailScreen', { post });
+        }}
+      >
+        <Image
+          source={{ uri: post.image }}
+          style={styles.thumbnail}
+        />
+        <View style={styles.textContainer}>
+          <Text style={styles.title}>{post.title}</Text>
+          <Text numberOfLines={2} style={styles.description}>
+            {post.description}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+  
+  
 
   return (
     <View style={styles.container}>
@@ -53,9 +79,16 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginRight: 10,
   },
+  textContainer: {
+    flex: 1,
+  },
   title: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  description: {
+    fontSize: 14,
+    color: '#666',
   },
   noResultsText: {
     fontSize: 18,
