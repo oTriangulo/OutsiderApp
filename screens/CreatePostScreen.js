@@ -285,12 +285,13 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderColor: 'gray',
+    borderColor: '#30A7EB',
     borderWidth: 1,
     marginBottom: 12,
     paddingLeft: 8,
     marginTop: 10,
     width: '100%',
+    borderRadius: 15, // Cantos arredondados
   },
   image: {
     width: 200,

@@ -17,18 +17,17 @@ import SearchResultsScreen from './screens/SearchResultsScreen';
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
 
-// Navegação do Drawer
 const DrawerNavigator = () => (
   <Drawer.Navigator>
     <Drawer.Screen
       name="Home"
       component={HomeScreen}
-      options={{ headerShown: false, headerShown: false }}
+      options={{ headerShown: false }}
     />
     <Drawer.Screen
       name="Profile"
       component={ProfileScreen}
-      options={{ headerShown: false, headerShown: false }}
+      options={{ headerShown: false }}
     />
     <Drawer.Screen
       name="CreatePost"
@@ -38,7 +37,7 @@ const DrawerNavigator = () => (
     <Drawer.Screen
       name="SearchResults"
       component={SearchResultsScreen}
-      options={{ title: 'Resultados da Pesquisa' }}
+      options={{ title: 'Resultados da Pesquisa', headerShown: true }} 
     />
   </Drawer.Navigator>
 );

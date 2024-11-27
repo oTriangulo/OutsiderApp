@@ -37,7 +37,6 @@ const SignUpScreen = ({ navigation }) => {
     }
   };
 
-  // Função que faz o upload da imagem para dentro do bucket, a mesma função que é utilizada no login
   const uploadImageToBucket = async (uri, userId) => {
     try {
       if (!uri) {
@@ -45,31 +44,28 @@ const SignUpScreen = ({ navigation }) => {
         return null;
       }
   
-      // Const para configurar o nome do arquivo
       const fileExt = uri.split('.').pop();
       const fileName = `${uuid.v4()}.${fileExt}`;
   
-      // Iniciar o upload para o Supabase Storage
       const { data, error } = await supabase.storage
-        .from('files') // nome do nosso bucket (importante, deu muito problema)
-        .upload(`profile_pictures/${fileName}`, { //definição de nome da pasta para fazer o upload
+        .from('files')
+        .upload(`profile_pictures/${fileName}`, {
           uri,
           type: `image/${fileExt}`,
           name: fileName,
         });
   
-      if (error) { // se der erro no upload do arquivo, retorna null e mostra o erro
+      if (error) {
         console.error('Erro no Supabase ao fazer upload:', error.message);
         Alert.alert('Erro ao fazer upload', error.message);
         return null;
       }
   
-      // Gerar URL pública da imagem no bucket
       const { publicUrl } = supabase.storage
         .from('files')
         .getPublicUrl(`profile_pictures/${fileName}`).data;
   
-      return publicUrl; // Retorna a URL pública do arquivo
+      return publicUrl;
     } catch (error) {
       console.error('Erro ao fazer upload:', error.message);
       Alert.alert('Erro ao fazer upload', 'Verifique sua conexão e tente novamente.');
@@ -77,7 +73,6 @@ const SignUpScreen = ({ navigation }) => {
     }
   };
 
-  // Função de cadastro do usuário
   const signUp = async () => {
     try {
       if (!email || !password || !username) {
@@ -106,14 +101,12 @@ const SignUpScreen = ({ navigation }) => {
         profilePicturePath = await uploadImageToBucket(profilePicture, user.id);
       }
 
-      const { error: profileError } = await supabase.from('user_profiles').insert([
-        {
-          id: user.id,
-          username,
-          email,
-          profile_picture: profilePicturePath,
-        },
-      ]);
+      const { error: profileError } = await supabase.from('user_profiles').insert([{
+        id: user.id,
+        username,
+        email,
+        profile_picture: profilePicturePath,
+      }]);
 
       if (profileError) {
         console.error('Erro ao inserir dados no user_profiles:', profileError);
@@ -129,10 +122,13 @@ const SignUpScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Registro</Text>
+      {/* Logo centralizado */}
+      <Image source={require('../assets/icon.png')} style={styles.logo} />
+      
+      <Text style={styles.title}>Crie sua conta</Text>
       
       <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-        <Text>Escolher Foto de Perfil</Text>
+        <Text style={styles.imagePickerText}>Escolher Foto de Perfil</Text>
       </TouchableOpacity>
 
       {profilePicture && (
@@ -167,10 +163,12 @@ const SignUpScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <Button title="Registrar" onPress={signUp} />
+      <TouchableOpacity style={styles.signupButton} onPress={signUp}>
+        <Text style={styles.signupButtonText}>CADASTRAR-SE</Text>
+      </TouchableOpacity>
 
       <TouchableOpacity style={styles.goBackButton} onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.goBackText}>Voltar para Login</Text>
+        <Text style={styles.goBackText}>Já tem uma conta? Faça Login</Text>
       </TouchableOpacity>
     </View>
   );
@@ -181,55 +179,88 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 20,
+    backgroundColor: '#f9f9f9',
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    marginBottom: 20,
+    alignSelf: 'center',
+    resizeMode: 'contain',
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 10,
     textAlign: 'center',
-  },
-  input: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 12,
-    paddingLeft: 8,
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  passwordInput: {
-    flex: 1,
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    paddingLeft: 8,
+    color: '#333',
   },
   imagePicker: {
     marginTop: 10,
-    padding: 10,
-    backgroundColor: '#dcdcdc',
+    marginBottom: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: '#007bff',
     alignItems: 'center',
+    borderRadius: 25,
+  },
+  imagePickerText: {
+    color: '#fff',
+    fontSize: 16,
   },
   profileImage: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    marginTop: 20,
+    marginTop: 15,
     alignSelf: 'center',
+    borderWidth: 2,
+    borderColor: '#ddd',
   },
-  goBackButton: {
+  input: {
+    height: 45,
+    borderColor: '#ddd',
+    borderWidth: 1,
+    marginBottom: 15,
+    paddingLeft: 12,
+    borderRadius: 25,
+    backgroundColor: '#fff',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  passwordInput: {
+    flex: 1,
+    height: 45,
+    borderColor: '#ddd',
+    borderWidth: 1,
+    paddingLeft: 12,
+    borderRadius: 25,
+    backgroundColor: '#fff',
+  },
+  signupButton: {
+    backgroundColor: '#FF9D00',
+    paddingVertical: 12,
+    borderRadius: 25,
     marginTop: 20,
     alignItems: 'center',
-    paddingVertical: 10,
-    backgroundColor: '#007bff',
-    borderRadius: 5,
+  },
+  signupButtonText: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  goBackButton: {
+    marginTop: 10,
+    paddingVertical: 8,
+    borderRadius: 10,
+    alignItems: 'center',
   },
   goBackText: {
-    color: 'white',
+    color: '#333',
     fontSize: 16,
   },
 });

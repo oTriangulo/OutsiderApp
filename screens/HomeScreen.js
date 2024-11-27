@@ -22,6 +22,8 @@ const HomeScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Header />
+      {/* Adiciona a frase "Lugares populares:" */}
+      <Text style={styles.popularText}>Lugares populares:</Text>
       <Feed navigation={navigation} onPostPress={handlePostPress} />
       <TouchableOpacity 
         style={styles.addButton} 
@@ -38,6 +40,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 25,
     backgroundColor: '#fff', 
+  },
+  popularText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginHorizontal: 16,
+    marginVertical: 8,
+    color: '#333',
   },
   content: {
     flex: 1,

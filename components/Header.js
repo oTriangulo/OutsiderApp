@@ -36,6 +36,7 @@ const Header = () => {
         <Icon name="menu" size={24} color="#30A7EB" style={styles.icon} />
       </TouchableOpacity>
 
+
       {/* Barra de pesquisa */}
       <TextInput
         placeholder="Pesquisar..."
