@@ -5,15 +5,15 @@ const SearchResultsScreen = ({ route, navigation }) => {
   const { searchResults } = route.params;
   
   const renderItem = ({ item }) => {
-    // Verifique os dados do item
+    // Verificando os dados do item
     const post = {
       id: item.id,
       title: item.title || "Sem Título",
       description: item.description || "Sem Descrição",
       image: item.image || 'https://via.placeholder.com/400x200.png?text=Sem+Imagem',
-      latitude: item.latitude || 0,  // Se não houver latitude, definimos 0 como padrão
-      longitude: item.longitude || 0,  // Se não houver longitude, definimos 0 como padrão
-      created_at: item.created_at || new Date().toISOString(),  // Se não houver data, usa a data atual
+      latitude: item.latitude || 0,  // Definindo latitude e longitude com valores padrão caso não estejam presentes
+      longitude: item.longitude || 0,
+      created_at: item.created_at || new Date().toISOString(),
     };
   
     // Log para depuração
@@ -23,7 +23,7 @@ const SearchResultsScreen = ({ route, navigation }) => {
       <TouchableOpacity
         style={styles.resultItem}
         onPress={() => {
-          // Passando o post com todos os detalhes para a DetailScreen
+          // Passando o post com todos os detalhes, incluindo latitude e longitude para a DetailScreen
           navigation.navigate('DetailScreen', { post });
         }}
       >
@@ -41,8 +41,6 @@ const SearchResultsScreen = ({ route, navigation }) => {
     );
   };
   
-  
-
   return (
     <View style={styles.container}>
       {searchResults.length > 0 ? (
