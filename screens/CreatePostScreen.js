@@ -27,6 +27,7 @@ const CreatePostScreen = ({ navigation }) => {
   const [region, setRegion] = useState(null);  // Inicialmente nulo
   const [address, setAddress] = useState('');
 
+  // Efeito para verificar a sessão do usuário e obter permissões de localização
   useEffect(() => {
     const verifySession = async () => {
       try {
@@ -44,7 +45,7 @@ const CreatePostScreen = ({ navigation }) => {
         setLoading(false);
       }
     };
-
+    
     const getLocationPermission = async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
@@ -52,7 +53,7 @@ const CreatePostScreen = ({ navigation }) => {
         return;
       }
 
-      // Tentar obter a localização atual
+      // Obtém a localização atual do dispositivo
       const location = await Location.getCurrentPositionAsync({});
       if (location) {
         setRegion({
@@ -62,7 +63,7 @@ const CreatePostScreen = ({ navigation }) => {
           longitudeDelta: 0.0421,
         });
       } else {
-        // Se a localização não for encontrada, usar uma localização aleatória
+        // Se a localização não for encontrada, usar uma localização aleatória para não dar problemas
         setRegion({
           latitude: 37.78825,
           longitude: -122.4324,
@@ -76,6 +77,7 @@ const CreatePostScreen = ({ navigation }) => {
     getLocationPermission();
   }, [navigation]);
 
+  // Função para selecionar imagem da galeria
   const pickImage = async () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -96,7 +98,7 @@ const CreatePostScreen = ({ navigation }) => {
       Alert.alert('Erro', 'Ocorreu um erro ao acessar a galeria.');
     }
   };
-
+  // Função para tirar foto com a câmera
   const takePhoto = async () => {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -117,6 +119,7 @@ const CreatePostScreen = ({ navigation }) => {
     }
   };
 
+  // Função para fazer upload da imagem no Supabase
   const uploadImageAsync = async (uri) => {
     try {
       if (!uri) {
@@ -124,9 +127,11 @@ const CreatePostScreen = ({ navigation }) => {
         return null;
       }
 
+      // Gera um nome de arquivo
       const fileExt = uri.split('.').pop();
       const fileName = `${uuid.v4()}.${fileExt}`;
 
+      // Faz upload da imagem para o Supabase
       const { data, error } = await supabase.storage
         .from('files')
         .upload(`files/${fileName}`, {
@@ -218,6 +223,7 @@ const CreatePostScreen = ({ navigation }) => {
     }
   };
 
+   // Exibe uma tela de carregamento enquanto os dados estão sendo carregados
   if (loading || !region) {
     return (
       <View style={styles.container}>

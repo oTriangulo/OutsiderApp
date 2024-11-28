@@ -13,6 +13,7 @@ import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/Ionicons';
 import uuid from 'react-native-uuid';
 
+// signup screen além de criar o cadastro de usuário também faz diversos tratamentos de erros, para assim indicar onde pode estar erro 
 const SignUpScreen = ({ navigation }) => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -122,7 +123,7 @@ const SignUpScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Logo centralizado */}
+      
       <Image source={require('../assets/icon.png')} style={styles.logo} />
       
       <Text style={styles.title}>Crie sua conta</Text>

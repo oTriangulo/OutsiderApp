@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ImageBackground, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { supabase } from '../configs/Supabase';
 
+// Definimos um tamanho fixo de página para manter a performance consistente e evitar sobrecarregar a memória com muitos dados de uma só vez
 const PAGE_SIZE = 20;
 
+ // Utilizamos estados para controlar os dados e os fluxos de interação do usuário, como carregamento e atualização.
 const Feed = ({ onPostPress }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,10 +14,12 @@ const Feed = ({ onPostPress }) => {
   const [hasMore, setHasMore] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Busca os posts na primeira renderização da pagina
   useEffect(() => {
     fetchPosts(currentPage);
   }, [currentPage]);
 
+  // Busca os posts de acordo com a paginacao
   const fetchPosts = async (page = 1) => {
     if (page === 1) {
       setLoading(true);
@@ -24,14 +28,17 @@ const Feed = ({ onPostPress }) => {
     }
 
     try {
+      // Utilizamos limites no banco de dados para reduzir o tráfego de rede e melhorar a performance
       const from = (page - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 
+      // Pega as informacoes dos posts no supabase, para então carregar eles na tela
       const { data: postsData, error } = await supabase
         .from('posts')
         .select('id, title, description, image, created_at, latitude, longitude')
         .range(from, to);
 
+        // Pequeno tratamento de erros para caso algo dê errado
       if (error) {
         throw new Error('Erro ao carregar posts.');
       }
@@ -49,7 +56,7 @@ const Feed = ({ onPostPress }) => {
       setRefreshing(false);
     }
   };
-
+ // Redefinimos o estado para carregar tudo do zero durante o "pull-to-refresh", garantindo que os dados estejam atualizados.
   const onRefresh = () => {
     setRefreshing(true);
     setCurrentPage(1);
@@ -80,7 +87,7 @@ const Feed = ({ onPostPress }) => {
       </View>
     );
   }
-
+  // Evitamos exibir uma lista vazia sem contexto ao informar que não há posts disponíveis no momento.
   if (posts.length === 0 && !loading) {
     return (
       <View style={styles.emptyContainer}>

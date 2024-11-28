@@ -1,3 +1,4 @@
+// importa o axios para fazer as requisicoes ao supabase
 import axios from 'axios';
 
 const api = axios.create({

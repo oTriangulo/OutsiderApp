@@ -5,6 +5,7 @@ import MapView, { Marker } from 'react-native-maps';
 export default function DetailScreen({ route }) {
   const { post } = route.params;
 
+    // Caso o post não exista, exibe uma mensagem de erro
   if (!post) {
     return (
       <View style={styles.container}>
@@ -13,7 +14,7 @@ export default function DetailScreen({ route }) {
     );
   }
 
-  // Garantindo que latitude e longitude sejam floats e dentro do intervalo
+  // Garantindo que latitude e longitude sejam números float, caso contrário usaremos localização padrão. Justamente pois utilizar em outro formato pode dar problemas
   let latitude = parseFloat(post.latitude) || 0;
   let longitude = parseFloat(post.longitude) || 0;
 
@@ -26,6 +27,7 @@ export default function DetailScreen({ route }) {
     longitude >= -180 &&
     longitude <= 180;
 
+    // Caso a localização seja inválida, exibe um alerta e define uma localização padrão
   if (!isLocationValid) {
     Alert.alert('Erro', 'Latitude ou Longitude inválida. Usando localização padrão.');
     latitude = -23.55052; // Localização padrão (São Paulo)

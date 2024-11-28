@@ -60,6 +60,7 @@ const Header = () => {
   }, []);
 
   const handleSearch = async () => {
+    // Executa a pesquisa por posts e navega para a tela de resultados.
     if (searchTerm.trim() === '') return;
 
     try {
@@ -91,7 +92,7 @@ const Header = () => {
       console.error('Erro ao buscar sugestões:', error.message);
     }
   };
-
+// Fecha o teclado e limpa sugestões ao tocar fora do campo.
   const dismissKeyboard = () => {
     Keyboard.dismiss();
     setSuggestions([]);
@@ -100,7 +101,7 @@ const Header = () => {
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.header}>
-        {/* Barra de pesquisa */}
+
         <TextInput
           placeholder="Pesquisar..."
           style={styles.searchInput}

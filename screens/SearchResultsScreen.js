@@ -1,29 +1,27 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 
+//tela feita para mostrar os resultados do mecanismo de busca 
 const SearchResultsScreen = ({ route, navigation }) => {
   const { searchResults } = route.params;
-  
+  // const feita para renderizar as miniaturas do resultado que foi buscado 
   const renderItem = ({ item }) => {
-    // Verificando os dados do item
     const post = {
       id: item.id,
       title: item.title || "Sem Título",
       description: item.description || "Sem Descrição",
       image: item.image || 'https://via.placeholder.com/400x200.png?text=Sem+Imagem',
-      latitude: item.latitude || 0,  // Definindo latitude e longitude com valores padrão caso não estejam presentes
+      latitude: item.latitude || 0,  
       longitude: item.longitude || 0,
       created_at: item.created_at || new Date().toISOString(),
     };
   
-    // Log para depuração
     console.log("Post item:", post);
   
     return (
       <TouchableOpacity
         style={styles.resultItem}
         onPress={() => {
-          // Passando o post com todos os detalhes, incluindo latitude e longitude para a DetailScreen
           navigation.navigate('DetailScreen', { post });
         }}
       >

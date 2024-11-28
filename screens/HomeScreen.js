@@ -6,11 +6,14 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import Feed from '../components/Feed';
 
 const HomeScreen = ({ navigation }) => {
+  // Função de logout que remove o token de usuário do AsyncStorage e navega para a tela de Login
+  // Inutilizado após a fase de desenvolvimento
   const logout = async () => {
     await AsyncStorage.removeItem('userToken');
     navigation.replace('Login');
   };
 
+    // Função para navegação para a tela de detalhes do post, levando as informações do post como parâmetro
   const handlePostPress = (post) => {
     navigation.navigate('DetailScreen', { post });
   };

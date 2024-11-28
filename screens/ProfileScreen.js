@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../configs/Supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage'; 
 
+//tela simples apenas para poder fazer logout e exibir nome e foto do usuário
 const ProfileScreen = ({ navigation }) => {
   const [profilePicture, setProfilePicture] = useState(null);
   const [username, setUsername] = useState('');

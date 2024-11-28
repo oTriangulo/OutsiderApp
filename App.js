@@ -5,7 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 
-// Importando as telas
+// Importando as telas para o arquivo app.js se comunicar com todas telas
 import HomeScreen from './screens/HomeScreen';
 import LoginScreen from './screens/LoginScreen';
 import ProfileScreen from './screens/ProfileScreen';
@@ -14,9 +14,11 @@ import CreatePostScreen from './screens/CreatePostScreen';
 import DetailScreen from './screens/DetailScreen';
 import SearchResultsScreen from './screens/SearchResultsScreen';
 
+//criando stackNavigator para navegar entre as telas e Drawer para uso principalmente no menu lateral 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
 
+//const criada para utilização de menu lateral
 const DrawerNavigator = () => (
   <Drawer.Navigator screenOptions={{ headerShown: false }}>
     <Drawer.Screen name="Home" component={HomeScreen} />
@@ -25,11 +27,11 @@ const DrawerNavigator = () => (
   </Drawer.Navigator>
 );
 
+//a function app foi feita de maneira que a primeira coisa a ser feita seja a conferencia do token para exibição da tela correta
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [userToken, setUserToken] = useState(null);
 
-  // Verificando se o usuário está logado
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
@@ -56,20 +58,14 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName={userToken ? 'Drawer' : 'Login'}>
-        {/* Tela de Login */}
+        
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-
-        {/* Menu Lateral (Drawer) */}
         <Stack.Screen name="Drawer" component={DrawerNavigator} options={{ headerShown: false }} />
-
-        {/* Outras telas */}
         <Stack.Screen name="Signup" component={SignUpScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
         <Stack.Screen name="CreatePost" component={CreatePostScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
         <Stack.Screen name="DetailScreen" component={DetailScreen} options={{ title: 'Detalhes do Post' }} />
-        
-        {/* Movendo SearchResultsScreen para Stack.Navigator */}
         <Stack.Screen
           name="SearchResults"
           component={SearchResultsScreen}
